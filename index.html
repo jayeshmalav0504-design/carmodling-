@@ -1,2058 +1,2112 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CAR GUY | 3D Car Studio</title>
-
-<!-- Three.js + OrbitControls + GLTFExporter -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/exporters/GLTFExporter.js"></script>
-
-<style>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  background: #080808;
-  color: #f3f4f6;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  overflow-x: hidden;
-  min-height: 100vh;
-}
-
-header {
-  padding: 16px 5%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: #111111;
-  border-bottom: 1px solid #262626;
-  position: sticky;
-  top: 0;
-  z-index: 30;
-}
-
-.logo {
-  color: #ff3b30;
-  font-size: 26px;
-  font-weight: 900;
-  letter-spacing: 1px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.logo span {
-  font-size: 11px;
-  background: #ff3b30;
-  color: white;
-  padding: 2px 7px;
-  border-radius: 6px;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-}
-
-nav {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-}
-
-nav a, nav button {
-  color: #e5e5e5;
-  text-decoration: none;
-  font-size: 13px;
-  font-weight: 600;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  padding: 6px 12px;
-  border-radius: 8px;
-  transition: all 0.2s;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-nav a:hover, nav button:hover {
-  background: #222;
-  color: #ff3b30;
-}
-
-.hero {
-  padding: 25px 5% 15px;
-  text-align: center;
-}
-
-.hero h1 {
-  font-size: 36px;
-  font-weight: 900;
-  letter-spacing: 1.5px;
-  margin-bottom: 6px;
-}
-
-.hero span {
-  color: #ff3b30;
-  text-shadow: 0 0 25px rgba(255, 59, 48, 0.4);
-}
-
-.hero p {
-  color: #888888;
-  font-size: 14px;
-}
-
-.studio {
-  display: grid;
-  grid-template-columns: 280px 1fr 280px;
-  gap: 18px;
-  padding: 15px 4% 30px;
-  max-width: 1600px;
-  margin: 0 auto;
-}
-
-.panel {
-  background: #121212;
-  border: 1px solid #262626;
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-  display: flex;
-  flex-col;
-  gap: 12px;
-  overflow-y: auto;
-  max-height: 80vh;
-}
-
-.panel h2 {
-  font-size: 14px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: #e5e5e5;
-  font-weight: 800;
-  border-bottom: 1px solid #262626;
-  padding-bottom: 8px;
-  margin-top: 6px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-select, button, input[type="text"], input[type="color"] {
-  width: 100%;
-  margin: 6px 0;
-  padding: 11px 12px;
-  border-radius: 8px;
-  border: 1px solid #333333;
-  background: #1c1c1c;
-  color: white;
-  font-size: 13px;
-  font-weight: 600;
-  outline: none;
-  transition: border-color 0.2s;
-}
-
-select:focus, input:focus {
-  border-color: #ff3b30;
-}
-
-select optgroup {
-  background: #161616;
-  color: #ff3b30;
-  font-weight: bold;
-}
-
-select option {
-  background: #222;
-  color: #fff;
-}
-
-button.btn-primary {
-  background: #ff3b30;
-  color: white;
-  border: none;
-  cursor: pointer;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-  transition: all 0.2s;
-  box-shadow: 0 4px 15px rgba(255, 59, 48, 0.3);
-}
-
-button.btn-primary:hover {
-  background: #e02d23;
-  transform: translateY(-1px);
-}
-
-button.btn-secondary {
-  background: #222222;
-  border: 1px solid #383838;
-  color: #e5e5e5;
-  cursor: pointer;
-  font-weight: 700;
-  transition: all 0.2s;
-}
-
-button.btn-secondary:hover {
-  background: #2c2c2c;
-  border-color: #555;
-  color: #fff;
-}
-
-.canvas-container {
-  position: relative;
-  width: 100%;
-  height: 580px;
-  background: radial-gradient(circle at center, #242424 0%, #0a0a0a 100%);
-  border: 1px solid #262626;
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.7);
-}
-
-#carCanvas {
-  width: 100% !important;
-  height: 100% !important;
-  display: block;
-}
-
-.car-badge-overlay {
-  position: absolute;
-  top: 16px;
-  left: 16px;
-  background: rgba(18, 18, 18, 0.85);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 10px;
-  padding: 8px 14px;
-  pointer-events: none;
-  z-index: 10;
-}
-
-.car-badge-overlay .title {
-  font-weight: 900;
-  font-size: 14px;
-  color: #fff;
-  letter-spacing: 0.5px;
-}
-
-.car-badge-overlay .category {
-  font-size: 10px;
-  color: #ff3b30;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.canvas-hud-bottom {
-  position: absolute;
-  bottom: 16px;
-  left: 16px;
-  right: 16px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  pointer-events: none;
-  z-index: 10;
-}
-
-.hud-pill {
-  background: rgba(18, 18, 18, 0.8);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 8px;
-  padding: 6px 12px;
-  font-size: 11px;
-  font-weight: 700;
-  color: #a3a3a3;
-  pointer-events: auto;
-}
-
-label {
-  display: block;
-  font-size: 11px;
-  font-weight: 800;
-  text-transform: uppercase;
-  color: #888;
-  margin-top: 10px;
-  letter-spacing: 0.5px;
-}
-
-input[type="color"] {
-  height: 42px;
-  padding: 4px;
-  cursor: pointer;
-}
-
-input[type="range"] {
-  width: 100%;
-  accent-color: #ff3b30;
-  margin: 6px 0;
-  cursor: pointer;
-}
-
-.footer {
-  padding: 25px;
-  text-align: center;
-  color: #666;
-  font-size: 12px;
-  border-top: 1px solid #1a1a1a;
-  margin-top: 20px;
-}
-
-/* Modals */
-.modal {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(6px);
-  z-index: 100;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-}
-
-.modal.active {
-  display: flex;
-}
-
-.modal-content {
-  background: #141414;
-  border: 1px solid #333;
-  border-radius: 16px;
-  width: 100%;
-  max-width: 520px;
-  max-height: 85vh;
-  overflow-y: auto;
-  padding: 24px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid #262626;
-  padding-bottom: 12px;
-  margin-bottom: 16px;
-}
-
-.modal-header h3 {
-  font-size: 16px;
-  font-weight: 900;
-  color: #fff;
-}
-
-.modal-close {
-  background: transparent;
-  border: none;
-  color: #888;
-  font-size: 18px;
-  cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 6px;
-}
-
-.modal-close:hover {
-  color: white;
-  background: #222;
-}
-
-/* Video Intro Overlay */
-#intro-overlay {
-  position: fixed;
-  inset: 0;
-  background: #000;
-  z-index: 150;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  transition: opacity 0.6s ease;
-}
-
-#intro-overlay video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.intro-topbar {
-  position: absolute;
-  top: 16px;
-  left: 20px;
-  right: 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  z-index: 20;
-}
-
-.intro-badge {
-  background: rgba(0, 0, 0, 0.65);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  padding: 6px 14px;
-  border-radius: 99px;
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 1px;
-  color: white;
-}
-
-.intro-center-btn {
-  position: absolute;
-  bottom: 35px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 20;
-  text-align: center;
-}
-
-.intro-enter-btn {
-  background: #ff3b30;
-  color: white;
-  font-size: 15px;
-  font-weight: 900;
-  letter-spacing: 1.5px;
-  padding: 14px 34px;
-  border-radius: 99px;
-  border: none;
-  cursor: pointer;
-  box-shadow: 0 0 35px rgba(255, 59, 48, 0.85);
-  transition: transform 0.2s, background 0.2s;
-}
-
-.intro-enter-btn:hover {
-  transform: scale(1.05);
-  background: #e02d23;
-}
-
-@media(max-width: 1100px) {
-  .studio {
-    grid-template-columns: 1fr;
-  }
-  .canvas-container {
-    height: 420px;
-  }
-}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>THE CAR MODLING — 3D & 4D Interactive Car Design Studio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Standard UMD Three.js scripts (100% compatible with Antigravity HTML sandbox) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/exporters/GLTFExporter.js"></script>
+  <style>
+    html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: system-ui, -apple-system, sans-serif; }
+    canvas { display: block; width: 100% !important; height: 100% !important; outline: none; }
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-thumb { background: rgba(100,116,139,0.35); border-radius: 99px; }
+  </style>
 </head>
+<body id="app-body" class="bg-slate-50 text-slate-800 select-none transition-colors duration-300">
 
-<body>
-
-<!-- VIDEO INTRO OVERLAY -->
-<div id="intro-overlay">
-  <div class="intro-topbar">
-    <div class="intro-badge">
-      <span style="color:#ff3b30;">●</span> CAR GUY • 3D STUDIO INTRO
-    </div>
-    <div style="display:flex; gap:10px;">
-      <button onclick="toggleIntroSound()" id="introSoundBtn" class="btn-secondary" style="width:auto; padding:6px 14px; border-radius:99px;">
-        🔇 Unmute
-      </button>
-      <button onclick="enterStudio()" class="btn-secondary" style="width:auto; padding:6px 14px; border-radius:99px;">
-        Skip Intro ✕
-      </button>
-    </div>
-  </div>
-
-  <video id="introVideo" src="intro.mp4" autoplay muted playsinline preload="auto" onended="enterStudio()"></video>
-
-  <div class="intro-center-btn">
-    <button onclick="enterStudio()" class="intro-enter-btn">
-      ⚡ ENTER 3D STUDIO
-    </button>
-    <div style="color:rgba(255,255,255,0.7); font-size:11px; margin-top:8px;">
-      Interactive 3D / 4D Indian & Sports Car Studio
-    </div>
-  </div>
-</div>
-
-<!-- HEADER -->
-<header>
-  <div class="logo">
-    CAR GUY <span>3D</span>
-  </div>
-  <nav>
-    <a href="#" onclick="resetCamera()">Home</a>
-    <button onclick="openGarageModal()">📁 Garage (<span id="garageNavCount">0</span>)</button>
-    <button onclick="openAiModal()" style="color:#38bdf8;">✨ AI Co-Pilot</button>
-    <button onclick="replayIntro()" title="Replay Intro">🎬 Intro</button>
-  </nav>
-</header>
-
-<!-- HERO -->
-<section class="hero">
-  <h1>BUILD YOUR <span>DREAM CAR</span></h1>
-  <p>Premium 3D & 4D Car Customization Studio</p>
-</section>
-
-<!-- MAIN 3D STUDIO -->
-<section class="studio">
-
-  <!-- LEFT PANEL: SELECT & CAMERA -->
-  <div class="panel">
-    <h2>SELECT YOUR CAR</h2>
-
-    <select id="carSelect" onchange="loadCar()">
-      <optgroup label="Indian Cars">
-        <option value="thar">Mahindra Thar Roxx</option>
-        <option value="scorpio">Mahindra Scorpio N</option>
-        <option value="harrier">Tata Harrier</option>
-        <option value="nexon">Tata Nexon</option>
-        <option value="xuv700">Mahindra XUV700</option>
-      </optgroup>
-
-      <optgroup label="Sports Cars">
-        <option value="gtr">Nissan GT-R R35</option>
-        <option value="bmw_m4">BMW M4</option>
-        <option value="gt3rs">Porsche 911 GT3 RS</option>
-        <option value="aventador">Lamborghini Aventador</option>
-        <option value="supra">Toyota Supra MK5</option>
-      </optgroup>
-    </select>
-
-    <button onclick="loadCar()" class="btn-primary">LOAD SELECTED CAR</button>
-
-    <h2>CAMERA CONTROLS</h2>
-    <button onclick="toggleTurntable()" id="btnRotate" class="btn-secondary">🔄 ROTATE 360°</button>
-    <button onclick="resetCamera()" class="btn-secondary">👁️ RESET CAMERA</button>
-    <button onclick="toggleCockpitView()" id="btnCockpit" class="btn-secondary">💺 COCKPIT VIEW</button>
-
-    <h2>PERFORMANCE & 4D</h2>
-    <button onclick="toggle4DWind()" id="btnWind" class="btn-secondary" style="border-color:#0284c7; color:#38bdf8;">
-      💨 4D WIND TUNNEL
-    </button>
-    <button id="btnRev" class="btn-secondary" style="border-color:#e11d48; color:#f43f5e;"
-      onmousedown="startRev()" onmouseup="stopRev()" onmouseleave="stopRev()"
-      ontouchstart="startRev()" ontouchend="stopRev()">
-      🔊 HOLD TO REV ENGINE
-    </button>
-  </div>
-
-  <!-- CENTER 3D VIEWPORT -->
-  <div class="canvas-container">
-    <div class="car-badge-overlay">
-      <div id="badgeCarName" class="title">Mahindra Thar Roxx</div>
-      <div id="badgeCategory" class="category">Indian 4x4 Offroader</div>
-    </div>
-
-    <canvas id="carCanvas"></canvas>
-
-    <div class="canvas-hud-bottom">
-      <div class="hud-pill" id="hudSpeed" style="display:none;">
-        💨 Wind Speed: <span id="speedValue" style="color:#38bdf8;">140 km/h</span>
+  <!-- CINEMATIC VIDEO INTRO OVERLAY -->
+  <div id="intro-overlay" class="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center transition-opacity duration-700">
+    <!-- Top Bar Controls -->
+    <div class="absolute top-5 left-5 right-5 flex items-center justify-between z-30 pointer-events-auto">
+      <div class="flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white text-xs font-bold tracking-wider">
+        <span class="w-2.5 h-2.5 rounded-full bg-red-600 animate-ping"></span>
+        <span>THE CAR MODLING • 4D F1 INTRO</span>
       </div>
-      <div class="hud-pill" style="margin-left:auto;">
-        🖱️ Orbit: Left Click • Pan: Right Click • Zoom: Scroll
+      <div class="flex items-center gap-2">
+        <button id="intro-audio-btn" onclick="toggleIntroAudio()" class="px-3.5 py-1.5 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-md border border-white/20 text-white text-xs font-bold flex items-center gap-1.5 transition">
+          <span id="intro-audio-icon">🔇</span> <span id="intro-audio-text">Unmute</span>
+        </button>
+        <button onclick="enterStudio()" class="px-4 py-1.5 rounded-full bg-white/20 hover:bg-white/40 text-white text-xs font-bold backdrop-blur-md border border-white/30 transition">
+          Skip Intro ✕
+        </button>
+      </div>
+    </div>
+
+    <!-- Video Element -->
+    <div class="relative w-full h-full flex items-center justify-center overflow-hidden bg-black">
+      <video id="intro-video" 
+        src="intro.mp4" 
+        class="w-full h-full object-cover md:object-contain" 
+        autoplay 
+        muted 
+        playsinline 
+        preload="auto"
+        onended="enterStudio()"
+        onerror="onIntroVideoError()">
+      </video>
+
+      <!-- Center-Bottom Call to Action -->
+      <div class="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-2 text-center pointer-events-auto">
+        <button onclick="enterStudio()" class="px-8 py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-500 hover:to-indigo-500 text-white text-sm font-black tracking-widest uppercase shadow-[0_0_35px_rgba(59,130,246,0.85)] border border-blue-400/40 transition transform hover:scale-105 active:scale-95 flex items-center gap-2">
+          <span>⚡ ENTER 3D STUDIO</span>
+        </button>
+        <p class="text-[11px] text-white/80 tracking-wide font-medium backdrop-blur-sm px-3.5 py-1 rounded-full bg-black/50 border border-white/10">
+          Red Bull F1 Livery • Click to enter interactive 3D/4D car builder
+        </p>
       </div>
     </div>
   </div>
 
-  <!-- RIGHT PANEL: MODIFY YOUR CAR -->
-  <div class="panel">
-    <h2>MODIFY YOUR CAR</h2>
-
-    <label>Body Paint</label>
-    <input type="color" id="paint" value="#ff3b30" oninput="changePaint()">
-
-    <label>Wheel / Rim Colour</label>
-    <input type="color" id="wheelColor" value="#222222" oninput="changeWheels()">
-
-    <label>Body Finish</label>
-    <select id="finish" onchange="changeFinish()">
-      <option value="gloss">Glossy Clearcoat</option>
-      <option value="matte">Matte Stealth</option>
-      <option value="metallic">Metallic Flake</option>
-    </select>
-
-    <label>Suspension Stance (Ride Height)</label>
-    <input type="range" id="stanceRange" min="-30" max="30" value="0" oninput="changeStance(this.value)">
-
-    <label>Track Camber Angle</label>
-    <input type="range" id="camberRange" min="-7" max="0" step="0.5" value="-2" oninput="changeCamber(this.value)">
-
-    <div style="display:flex; gap:8px; margin-top:8px;">
-      <button onclick="changePaint()" class="btn-primary" style="margin:0;">APPLY PAINT</button>
-      <button onclick="changeWheels()" class="btn-secondary" style="margin:0;">APPLY WHEELS</button>
-    </div>
-
-    <h2>AERO & ACCESSORIES</h2>
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
-      <button onclick="toggleSpoiler()" id="btnSpoiler" class="btn-secondary">🪽 GT Spoiler</button>
-      <button onclick="toggleRoofBox()" id="btnRoofBox" class="btn-secondary">📦 Roof Box</button>
-      <button onclick="toggleCanards()" id="btnCanards" class="btn-secondary">✈️ Canards</button>
-      <button onclick="toggleWidebody()" id="btnWide" class="btn-secondary">🏎️ Widebody</button>
-    </div>
-
-    <h2>EXPORT & GARAGE</h2>
-    <button onclick="saveDesign()" class="btn-primary" style="background:#16a34a; box-shadow:0 4px 15px rgba(22,163,74,0.3);">
-      💾 SAVE TO GARAGE
-    </button>
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-      <button onclick="export3DModel()" class="btn-secondary" style="border-color:#2563eb; color:#60a5fa;">📦 EXPORT .GLB</button>
-      <button onclick="takeScreenshot()" class="btn-secondary" style="border-color:#059669; color:#34d399;">📸 SNAPSHOT</button>
-    </div>
-  </div>
-
-</section>
-
-<!-- GARAGE MODAL -->
-<div id="modalGarage" class="modal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h3>📁 MY SAVED GARAGE</h3>
-      <button onclick="closeGarageModal()" class="modal-close">✕</button>
-    </div>
-    <div id="garageList" style="display:flex; flex-direction:column; gap:10px;"></div>
-  </div>
-</div>
-
-<!-- GEMINI AI CO-PILOT MODAL -->
-<div id="modalAi" class="modal">
-  <div class="modal-content" style="max-width:560px;">
-    <div class="modal-header">
-      <div style="display:flex; align-items:center; gap:8px;">
-        <span style="font-size:18px;">✨</span>
-        <h3 style="margin:0;">GEMINI AI DESIGN MENTOR</h3>
+  <!-- TOP HEADER -->
+  <header class="h-14 px-4 border-b border-slate-200 bg-white/90 backdrop-blur-md flex items-center justify-between relative z-20">
+    <div class="flex items-center gap-3">
+      <div id="brand-badge" class="p-2 rounded-xl bg-blue-600 text-white font-black text-sm">🏎️</div>
+      <div>
+        <h1 class="font-black tracking-wider text-base leading-none">THE CAR MODLING</h1>
+        <p class="text-[10px] uppercase tracking-widest opacity-60 mt-0.5">3D & 4D Interactive Design Studio</p>
       </div>
-      <button onclick="closeAiModal()" class="modal-close">✕</button>
     </div>
 
-    <!-- Active Engine Status & Settings Toggle -->
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; background:#18181b; padding:8px 12px; border-radius:8px; border:1px solid #333;">
-      <div style="display:flex; align-items:center; gap:6px;">
-        <span id="geminiEngineStatusDot" style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#10b981;"></span>
-        <span id="geminiEngineStatusText" style="font-size:11px; font-weight:bold; color:#10b981;">Default Gemini Smart Engine (Active & Free)</span>
+    <!-- Bright Daylight Themes (Zero Black/Dark Mode) -->
+    <div class="hidden lg:flex items-center gap-1.5 bg-black/5 p-1 rounded-xl">
+      <button onclick="setTheme('daylight')" id="th-daylight" class="theme-btn px-3 py-1 rounded-lg text-xs font-bold bg-blue-600 text-white">Daylight Studio</button>
+      <button onclick="setTheme('coastal')" id="th-coastal" class="theme-btn px-3 py-1 rounded-lg text-xs font-bold hover:bg-white/60">Coastal Showroom</button>
+      <button onclick="setTheme('pastel')" id="th-pastel" class="theme-btn px-3 py-1 rounded-lg text-xs font-bold hover:bg-white/60">Pastel Concept</button>
+    </div>
+
+    <!-- Top Action Controls -->
+    <div class="flex items-center gap-2">
+      <button onclick="replayIntro()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 flex items-center gap-1" title="Play Intro Video">🎬 Intro</button>
+      <button onclick="toggleViewMode()" id="btn-view" class="px-3 py-1.5 rounded-xl text-xs font-bold border border-blue-200 bg-blue-50 text-blue-700">👁️ Interior Cockpit</button>
+      <button onclick="toggle4DTest()" id="btn-4d" class="px-3 py-1.5 rounded-xl text-xs font-bold border border-blue-200 bg-blue-50 text-blue-700">💨 4D Wind Test</button>
+      <button onclick="openGarage()" id="btn-garage" class="px-3 py-1.5 rounded-xl text-xs font-bold border border-blue-200 bg-blue-50 text-blue-700">📁 Garage (0)</button>
+      <div id="auth-slot"></div>
+      <button onclick="toggleModal('modal-key', true)" class="p-2 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 text-xs font-bold" title="Gemini API Key">🔑</button>
+    </div>
+  </header>
+
+  <!-- MAIN WORKSPACE -->
+  <div class="h-[calc(100vh-3.5rem)] relative flex overflow-hidden">
+
+    <!-- LEFT DESIGN TOOLKIT -->
+    <aside class="w-80 m-3 rounded-2xl border border-slate-200 bg-white/90 backdrop-blur-xl p-4 flex flex-col gap-3 z-10 shadow-lg overflow-y-auto">
+      <div class="grid grid-cols-6 gap-0.5 bg-black/5 p-1 rounded-xl text-[9px] font-bold">
+        <button onclick="switchTab('models')" id="tab-models" class="tab-btn py-2 rounded-lg bg-blue-600 text-white">🏎️<br>Model</button>
+        <button onclick="switchTab('paint')" id="tab-paint" class="tab-btn py-2 rounded-lg opacity-70">🎨<br>Paint</button>
+        <button onclick="switchTab('aero')" id="tab-aero" class="tab-btn py-2 rounded-lg opacity-70">🪽<br>Aero</button>
+        <button onclick="switchTab('stance')" id="tab-stance" class="tab-btn py-2 rounded-lg opacity-70">⚙️<br>Stance</button>
+        <button onclick="switchTab('parts')" id="tab-parts" class="tab-btn py-2 rounded-lg opacity-70">🔧<br>Parts</button>
+        <button onclick="switchTab('cabin')" id="tab-cabin" class="tab-btn py-2 rounded-lg opacity-70">💺<br>Cabin</button>
       </div>
-      <button onclick="toggleKeySettings()" style="width:auto; margin:0; padding:4px 10px; font-size:11px; background:#27272a; border:1px solid #444; border-radius:6px; cursor:pointer; color:#eee;">
-        🔑 Key Settings
-      </button>
-    </div>
 
-    <!-- API Key Accordion (Optional Google AI Studio Key) -->
-    <div id="apiKeySection" style="display:none; background:#121214; border:1px solid #2a2a2e; border-radius:8px; padding:12px; margin-bottom:14px;">
-      <div style="font-size:11px; color:#aaa; margin-bottom:8px; line-height:1.4;">
-        Optional: Connect your key from <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:#38bdf8; text-decoration:underline;">Google AI Studio</a>. Uses <b>Gemini 2.0 / 2.5 Flash</b>. Without a key, the studio runs seamlessly on the built-in Gemini engine!
-      </div>
-      <div style="display:flex; gap:6px; margin-bottom:8px;">
-        <input type="password" id="geminiApiKeyInput" placeholder="Paste Gemini API Key..." style="margin:0; font-size:12px; padding:8px;" />
-        <button onclick="testAndSaveGeminiKey()" style="width:auto; margin:0; padding:8px 14px; font-size:11px; white-space:nowrap; background:#2563eb;">Test & Save</button>
-        <button onclick="clearGeminiKey()" style="width:auto; margin:0; padding:8px 12px; font-size:11px; background:#333; color:#ccc;">Clear</button>
-      </div>
-      <div id="geminiKeyFeedback" style="display:none; font-size:11px; padding:8px 10px; border-radius:6px; line-height:1.4;"></div>
-    </div>
-
-    <div style="font-size:12px; color:#888; line-height:1.5; margin-bottom:12px;">
-      Type any natural command or select an iconic preset. The 3D car model will directly sculpt and transform in real time!
-    </div>
-
-    <!-- Quick Presets -->
-    <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px;">
-      <button onclick="askGeminiPrompt('Mahindra Thar Roxx offroad rally spec in Everest White')" class="btn-secondary" style="width:auto; padding:5px 10px; font-size:11px;">🏔️ Thar Rally Spec</button>
-      <button onclick="askGeminiPrompt('Porsche 911 GT3 RS track weapon in Lizard Green with massive wing')" class="btn-secondary" style="width:auto; padding:5px 10px; font-size:11px;">🏁 GT3 RS Track</button>
-      <button onclick="askGeminiPrompt('Nissan GT-R R35 Godzilla drift spec in Bayside Blue with gold rims')" class="btn-secondary" style="width:auto; padding:5px 10px; font-size:11px;">⚡ GT-R Godzilla</button>
-      <button onclick="askGeminiPrompt('Lamborghini Aventador stealth matte black with red calipers')" class="btn-secondary" style="width:auto; padding:5px 10px; font-size:11px;">🦇 Stealth Aventador</button>
-      <button onclick="askGeminiPrompt('Mahindra Scorpio N Big Daddy luxury SUV in Deep Forest Green')" class="btn-secondary" style="width:auto; padding:5px 10px; font-size:11px;">🦁 Scorpio N Boss</button>
-    </div>
-
-    <div id="aiResponseBox" style="background:#1a1a1a; border:1px solid #333; border-radius:10px; padding:12px; min-height:80px; font-size:12px; line-height:1.5; color:#d1d5db; margin-bottom:14px;">
-      Ready for commands. Try: <i>"paint it matte yellow with black rims"</i> or <i>"slam suspension with drift camber"</i>.
-    </div>
-
-    <div style="display:flex; gap:8px;">
-      <input type="text" id="inpAiPrompt" placeholder="Type command: e.g. 'make it red with black rims', 'add big wing'..." onkeydown="if(event.key==='Enter') executeAiPrompt()" />
-      <button onclick="executeAiPrompt()" class="btn-primary" style="width:auto; padding:0 20px;">Send</button>
-    </div>
-
-    <div id="aiUndoContainer" style="display:none; margin-top:10px;">
-      <button onclick="undoAiCommand()" class="btn-secondary" style="width:100%; border-color:#eab308; color:#facc15;">
-        ↩️ Undo AI Modifications
-      </button>
-    </div>
-  </div>
-</div>
-
-<div class="footer">
-  CAR GUY © 2026 | Premium 3D & 4D Car Customization Studio
-</div>
-
-<script>
-// ============================================================================
-// 1. THREE.JS VIEWPORT & SETUP
-// ============================================================================
-const canvas = document.getElementById("carCanvas");
-
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x0a0a0a);
-
-const camera = new THREE.PerspectiveCamera(
-  42,
-  canvas.clientWidth / canvas.clientHeight,
-  0.1,
-  1000
-);
-camera.position.set(5.5, 2.8, 6.5);
-
-const renderer = new THREE.WebGLRenderer({
-  canvas: canvas,
-  antialias: true,
-  preserveDrawingBuffer: true
-});
-renderer.setSize(canvas.clientWidth, canvas.clientHeight);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-
-const controls = new THREE.OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true;
-controls.dampingFactor = 0.05;
-controls.maxPolarAngle = Math.PI / 2 - 0.02; // Don't clip through floor
-controls.minDistance = 3.2;
-controls.maxDistance = 14;
-
-// Showroom Studio Lighting
-const ambientLight = new THREE.AmbientLight(0xffffff, 1.4);
-scene.add(ambientLight);
-
-const mainLight = new THREE.DirectionalLight(0xffffff, 2.8);
-mainLight.position.set(6, 10, 6);
-mainLight.castShadow = true;
-mainLight.shadow.mapSize.width = 2048;
-mainLight.shadow.mapSize.height = 2048;
-scene.add(mainLight);
-
-const fillLight = new THREE.DirectionalLight(0x93c5fd, 1.2);
-fillLight.position.set(-6, 6, -6);
-scene.add(fillLight);
-
-const rimLight = new THREE.DirectionalLight(0xff3b30, 0.8);
-rimLight.position.set(0, 4, -8);
-scene.add(rimLight);
-
-// Showroom Floor
-const floorGeo = new THREE.PlaneGeometry(120, 120);
-const floorMat = new THREE.MeshStandardMaterial({
-  color: 0x111111,
-  roughness: 0.25,
-  metalness: 0.5
-});
-const floor = new THREE.Mesh(floorGeo, floorMat);
-floor.rotation.x = -Math.PI / 2;
-floor.position.y = -0.01;
-floor.receiveShadow = true;
-scene.add(floor);
-
-// Circular Showroom Turntable Platform
-const platformGeo = new THREE.CylinderGeometry(4.2, 4.4, 0.12, 64);
-const platformMat = new THREE.MeshStandardMaterial({
-  color: 0x181818,
-  roughness: 0.35,
-  metalness: 0.6
-});
-const platform = new THREE.Mesh(platformGeo, platformMat);
-platform.position.y = 0.05;
-platform.receiveShadow = true;
-scene.add(platform);
-
-// Platform Edge Glow Ring
-const ringGeo = new THREE.TorusGeometry(4.35, 0.025, 16, 64);
-const ringMat = new THREE.MeshBasicMaterial({ color: 0xff3b30 });
-const glowRing = new THREE.Mesh(ringGeo, ringMat);
-glowRing.rotation.x = Math.PI / 2;
-glowRing.position.y = 0.11;
-scene.add(glowRing);
-
-// ============================================================================
-// 2. STATE & CAR CONFIGURATIONS
-// ============================================================================
-const CAR_DATABASE = {
-  thar: {
-    name: "Mahindra Thar Roxx",
-    category: "Indian 4x4 Offroader",
-    defaultColor: "#111111",
-    defaultRims: "#222222",
-    finish: "gloss",
-    rideHeight: 18,
-    camber: 0,
-    hasSpoiler: false,
-    hasRoofBox: true,
-    hasCanards: false,
-    widebody: 0.7,
-    sound: "diesel"
-  },
-  scorpio: {
-    name: "Mahindra Scorpio N",
-    category: "Indian D-Segment SUV",
-    defaultColor: "#1b3b22",
-    defaultRims: "#d1d5db",
-    finish: "metallic",
-    rideHeight: 12,
-    camber: -0.5,
-    hasSpoiler: false,
-    hasRoofBox: false,
-    hasCanards: false,
-    widebody: 0.5,
-    sound: "v8"
-  },
-  harrier: {
-    name: "Tata Harrier",
-    category: "Indian Dynamic Mid-SUV",
-    defaultColor: "#d97706",
-    defaultRims: "#1f2937",
-    finish: "metallic",
-    rideHeight: 8,
-    camber: -1,
-    hasSpoiler: false,
-    hasRoofBox: false,
-    hasCanards: false,
-    widebody: 0.45,
-    sound: "turbo"
-  },
-  nexon: {
-    name: "Tata Nexon",
-    category: "Indian Compact Crossover",
-    defaultColor: "#6b21a8",
-    defaultRims: "#e5e7eb",
-    finish: "metallic",
-    rideHeight: 6,
-    camber: -0.5,
-    hasSpoiler: false,
-    hasRoofBox: false,
-    hasCanards: false,
-    widebody: 0.3,
-    sound: "turbo"
-  },
-  xuv700: {
-    name: "Mahindra XUV700",
-    category: "Indian Tech Flagship SUV",
-    defaultColor: "#0f2347",
-    defaultRims: "#d1d5db",
-    finish: "gloss",
-    rideHeight: 6,
-    camber: -1,
-    hasSpoiler: false,
-    hasRoofBox: false,
-    hasCanards: false,
-    widebody: 0.45,
-    sound: "turbo"
-  },
-  gtr: {
-    name: "Nissan GT-R R35",
-    category: "Japanese Supercar (Godzilla)",
-    defaultColor: "#1d4ed8",
-    defaultRims: "#090d16",
-    finish: "gloss",
-    rideHeight: -15,
-    camber: -3.5,
-    hasSpoiler: true,
-    hasRoofBox: false,
-    hasCanards: true,
-    widebody: 0.7,
-    sound: "turbo"
-  },
-  bmw_m4: {
-    name: "BMW M4 Competition",
-    category: "German Track Coupe",
-    defaultColor: "#047857",
-    defaultRims: "#111827",
-    finish: "metallic",
-    rideHeight: -18,
-    camber: -3,
-    hasSpoiler: false,
-    hasRoofBox: false,
-    hasCanards: true,
-    widebody: 0.6,
-    sound: "turbo"
-  },
-  gt3rs: {
-    name: "Porsche 911 GT3 RS",
-    category: "German Nürburgring Weapon",
-    defaultColor: "#22c55e",
-    defaultRims: "#090d16",
-    finish: "gloss",
-    rideHeight: -25,
-    camber: -4.5,
-    hasSpoiler: true,
-    hasRoofBox: false,
-    hasCanards: true,
-    widebody: 0.8,
-    sound: "v10"
-  },
-  aventador: {
-    name: "Lamborghini Aventador",
-    category: "Italian V12 Hypercar",
-    defaultColor: "#eab308",
-    defaultRims: "#111111",
-    finish: "metallic",
-    rideHeight: -28,
-    camber: -4,
-    hasSpoiler: true,
-    hasRoofBox: false,
-    hasCanards: true,
-    widebody: 0.9,
-    sound: "v10"
-  },
-  supra: {
-    name: "Toyota Supra MK5",
-    category: "Japanese Sports Legend",
-    defaultColor: "#dc2626",
-    defaultRims: "#1f2937",
-    finish: "gloss",
-    rideHeight: -16,
-    camber: -3,
-    hasSpoiler: false,
-    hasRoofBox: false,
-    hasCanards: true,
-    widebody: 0.65,
-    sound: "turbo"
-  }
-};
-
-let currentKey = "thar";
-let currentConfig = { ...CAR_DATABASE.thar };
-let carGroup = new THREE.Group();
-scene.add(carGroup);
-
-let wheelMeshes = [];
-let streamlines = [];
-let isWindActive = false;
-let isTurntableActive = false;
-let isCockpitView = false;
-let lastAiBackup = null;
-
-// ============================================================================
-// 3. 3D PROCEDURAL CAR BUILDER (ALL 10 MODELS)
-// ============================================================================
-function rebuildCurrentCar() {
-  while (carGroup.children.length) {
-    carGroup.remove(carGroup.children[0]);
-  }
-  wheelMeshes = [];
-  streamlines = [];
-
-  const bodyColorHex = parseInt(currentConfig.defaultColor.replace("#", "0x"), 16);
-  const wheelColorHex = parseInt(currentConfig.defaultRims.replace("#", "0x"), 16);
-
-  const matRough = currentConfig.finish === "matte" ? 0.75 : (currentConfig.finish === "metallic" ? 0.22 : 0.12);
-  const matMetal = currentConfig.finish === "metallic" ? 0.85 : (currentConfig.finish === "matte" ? 0.1 : 0.4);
-  const matClear = currentConfig.finish === "matte" ? 0.05 : 1.0;
-
-  const bodyMat = new THREE.MeshPhysicalMaterial({
-    color: bodyColorHex,
-    roughness: matRough,
-    metalness: matMetal,
-    clearcoat: matClear
-  });
-
-  const blackTrimMat = new THREE.MeshStandardMaterial({ color: 0x141414, roughness: 0.6 });
-  const glassMat = new THREE.MeshPhysicalMaterial({
-    color: 0x93c5fd,
-    transparent: true,
-    opacity: 0.35,
-    roughness: 0.08
-  });
-
-  const rideOffset = (currentConfig.rideHeight || 0) * 0.003;
-  const bodyHolder = new THREE.Group();
-  bodyHolder.position.y = 0.42 + rideOffset;
-  carGroup.add(bodyHolder);
-
-  const k = currentKey;
-
-  // -------------------------------------------------------------
-  // MODEL 1: MAHINDRA THAR ROXX (Indian 4x4 Offroader)
-  // -------------------------------------------------------------
-  if (k === "thar") {
-    // Boxy rugged cabin
-    const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.92, 0.95, 3.8), bodyMat);
-    cabin.position.set(0, 0.58, -0.1); cabin.castShadow = true;
-    const hood = new THREE.Mesh(new THREE.BoxGeometry(1.82, 0.38, 1.45), bodyMat);
-    hood.position.set(0, 0.64, 1.45); hood.castShadow = true;
-    bodyHolder.add(cabin, hood);
-
-    // Thar 6-Slat Vertical Grille
-    const grille = new THREE.Mesh(new THREE.BoxGeometry(1.65, 0.42, 0.1), blackTrimMat);
-    grille.position.set(0, 0.62, 2.18);
-    bodyHolder.add(grille);
-
-    // Round Heritage Headlights
-    [-0.65, 0.65].forEach(x => {
-      const lamp = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 0.08, 20), new THREE.MeshBasicMaterial({ color: 0xfef08a }));
-      lamp.rotation.x = Math.PI / 2; lamp.position.set(x, 0.66, 2.22);
-      bodyHolder.add(lamp);
-    });
-
-    // Heavy Duty Offroad Front Bumper
-    const bumper = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.28, 0.32), blackTrimMat);
-    bumper.position.set(0, 0.28, 2.24);
-    bodyHolder.add(bumper);
-
-    // Flared Boxy Wheel Arches
-    [[-0.98, 1.25], [0.98, 1.25], [-0.98, -1.25], [0.98, -1.25]].forEach(([x, z]) => {
-      const arch = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.22, 0.85), blackTrimMat);
-      arch.position.set(x, 0.38, z); bodyHolder.add(arch);
-    });
-
-    // Safari Snorkel (Right A-Pillar)
-    const snorkel = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 1.1, 12), blackTrimMat);
-    snorkel.position.set(0.96, 0.98, 0.85); snorkel.rotation.x = 0.25;
-    bodyHolder.add(snorkel);
-
-    // Rear Mounted Spare Wheel
-    const spare = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.24, 24), blackTrimMat);
-    spare.rotation.x = Math.PI / 2; spare.position.set(0, 0.72, -2.05);
-    const spareRim = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.26, 0.25, 16), new THREE.MeshStandardMaterial({ color: wheelColorHex }));
-    spareRim.rotation.x = Math.PI / 2; spareRim.position.set(0, 0.72, -2.05);
-    bodyHolder.add(spare, spareRim);
-
-    // Upright Windshield & Windows
-    const glass = new THREE.Mesh(new THREE.BoxGeometry(1.78, 0.52, 2.2), glassMat);
-    glass.position.set(0, 0.94, -0.15); bodyHolder.add(glass);
-  }
-
-  // -------------------------------------------------------------
-  // MODEL 2: MAHINDRA SCORPIO N (Big Daddy of SUVs)
-  // -------------------------------------------------------------
-  else if (k === "scorpio") {
-    const mainBody = new THREE.Mesh(new THREE.BoxGeometry(2.02, 0.76, 4.35), bodyMat);
-    mainBody.position.set(0, 0.5, 0); mainBody.castShadow = true;
-    const hood = new THREE.Mesh(new THREE.BoxGeometry(1.92, 0.34, 1.55), bodyMat);
-    hood.position.set(0, 0.65, 1.4); hood.rotation.x = 0.07;
-    bodyHolder.add(mainBody, hood);
-
-    // Tall Scorpio Cabin & Windows
-    const glass = new THREE.Mesh(new THREE.BoxGeometry(1.82, 0.58, 2.5), glassMat);
-    glass.position.set(0, 1.05, -0.3); bodyHolder.add(glass);
-    const roof = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.06, 2.4), bodyMat);
-    roof.position.set(0, 1.35, -0.3); bodyHolder.add(roof);
-
-    // Chrome Twin-Peak Grille
-    const grille = new THREE.Mesh(new THREE.BoxGeometry(1.75, 0.35, 0.1), new THREE.MeshStandardMaterial({ color: 0xd4d4d8, metalness: 0.85 }));
-    grille.position.set(0, 0.55, 2.18); bodyHolder.add(grille);
-
-    // Roof Rails
-    [-0.78, 0.78].forEach(x => {
-      const rail = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.08, 2.1), new THREE.MeshStandardMaterial({ color: 0x71717a, metalness: 0.8 }));
-      rail.position.set(x, 1.42, -0.3); bodyHolder.add(rail);
-    });
-  }
-
-  // -------------------------------------------------------------
-  // MODEL 3: TATA HARRIER (Dynamic Mid-SUV)
-  // -------------------------------------------------------------
-  else if (k === "harrier") {
-    const body = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.68, 4.3), bodyMat);
-    body.position.set(0, 0.46, 0); body.castShadow = true;
-    const hood = new THREE.Mesh(new THREE.BoxGeometry(1.88, 0.3, 1.55), bodyMat);
-    hood.position.set(0, 0.58, 1.38); hood.rotation.x = 0.12;
-    bodyHolder.add(body, hood);
-
-    // Dual-Tone Black Floating Roof
-    const roof = new THREE.Mesh(new THREE.BoxGeometry(1.76, 0.06, 2.2), blackTrimMat);
-    roof.position.set(0, 1.25, -0.28); bodyHolder.add(roof);
-    const glass = new THREE.Mesh(new THREE.BoxGeometry(1.78, 0.52, 2.3), glassMat);
-    glass.position.set(0, 0.98, -0.25); bodyHolder.add(glass);
-
-    // Sharp Eyebrow LED DRLs on Hood Edge
-    [-0.68, 0.68].forEach(x => {
-      const drl = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.04, 0.06), new THREE.MeshBasicMaterial({ color: 0xe0f2fe }));
-      drl.position.set(x, 0.68, 2.16); bodyHolder.add(drl);
-    });
-  }
-
-  // -------------------------------------------------------------
-  // MODEL 4: TATA NEXON (Compact Crossover)
-  // -------------------------------------------------------------
-  else if (k === "nexon") {
-    const body = new THREE.Mesh(new THREE.BoxGeometry(1.88, 0.64, 3.9), bodyMat);
-    body.position.set(0, 0.44, 0); body.castShadow = true;
-    const hood = new THREE.Mesh(new THREE.BoxGeometry(1.76, 0.28, 1.35), bodyMat);
-    hood.position.set(0, 0.56, 1.28); hood.rotation.x = 0.14;
-    bodyHolder.add(body, hood);
-
-    const glass = new THREE.Mesh(new THREE.BoxGeometry(1.68, 0.5, 2.05), glassMat);
-    glass.position.set(0, 0.92, -0.15); bodyHolder.add(glass);
-    const roof = new THREE.Mesh(new THREE.BoxGeometry(1.62, 0.05, 1.95), blackTrimMat);
-    roof.position.set(0, 1.18, -0.15); bodyHolder.add(roof);
-
-    // Signature White Ceramic Waistline Belt
-    const belt = new THREE.Mesh(new THREE.BoxGeometry(1.92, 0.04, 3.65), new THREE.MeshBasicMaterial({ color: 0xf8fafc }));
-    belt.position.set(0, 0.68, -0.05); bodyHolder.add(belt);
-  }
-
-  // -------------------------------------------------------------
-  // MODEL 5: MAHINDRA XUV700 (Tech Luxury Flagship SUV)
-  // -------------------------------------------------------------
-  else if (k === "xuv700") {
-    const body = new THREE.Mesh(new THREE.BoxGeometry(2.04, 0.72, 4.45), bodyMat);
-    body.position.set(0, 0.48, 0); body.castShadow = true;
-    const hood = new THREE.Mesh(new THREE.BoxGeometry(1.92, 0.32, 1.6), bodyMat);
-    hood.position.set(0, 0.62, 1.42); hood.rotation.x = 0.09;
-    bodyHolder.add(body, hood);
-
-    const glass = new THREE.Mesh(new THREE.BoxGeometry(1.82, 0.54, 2.45), glassMat);
-    glass.position.set(0, 1.02, -0.25); bodyHolder.add(glass);
-    const roof = new THREE.Mesh(new THREE.BoxGeometry(1.78, 0.06, 2.35), bodyMat);
-    roof.position.set(0, 1.3, -0.25); bodyHolder.add(roof);
-
-    // C-Shaped Arrowhead Headlights
-    [-0.72, 0.72].forEach(x => {
-      const cLamp = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.16, 0.06), new THREE.MeshBasicMaterial({ color: 0xe0f2fe }));
-      cLamp.position.set(x, 0.58, 2.23); bodyHolder.add(cLamp);
-    });
-  }
-
-  // -------------------------------------------------------------
-  // MODEL 6: NISSAN GT-R R35 (Godzilla Supercar)
-  // -------------------------------------------------------------
-  else if (k === "gtr") {
-    const body = new THREE.Mesh(new THREE.BoxGeometry(1.96, 0.48, 4.45), bodyMat);
-    body.position.set(0, 0.32, 0); body.castShadow = true;
-    const hood = new THREE.Mesh(new THREE.BoxGeometry(1.86, 0.26, 1.65), bodyMat);
-    hood.position.set(0, 0.46, 1.4); hood.rotation.x = 0.15;
-    bodyHolder.add(body, hood);
-
-    // Dual Hood NACA Ducts
-    [-0.35, 0.35].forEach(x => {
-      const naca = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.05, 0.35), blackTrimMat);
-      naca.position.set(x, 0.58, 1.35); bodyHolder.add(naca);
-    });
-
-    const glass = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.52, 2.1), glassMat);
-    glass.position.set(0, 0.82, -0.15); bodyHolder.add(glass);
-    const roof = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.05, 1.45), bodyMat);
-    roof.position.set(0, 1.09, -0.2); bodyHolder.add(roof);
-
-    // Quad Iconic Round Taillights
-    [[-0.52, 0.42], [-0.28, 0.42], [0.28, 0.42], [0.52, 0.42]].forEach(([x, y]) => {
-      const light = new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.085, 0.05, 20), new THREE.MeshBasicMaterial({ color: 0xef4444 }));
-      light.rotation.x = Math.PI / 2; light.position.set(x, y, -2.24);
-      bodyHolder.add(light);
-    });
-  }
-
-  // -------------------------------------------------------------
-  // MODEL 7: BMW M4 (Track Coupe)
-  // -------------------------------------------------------------
-  else if (k === "bmw_m4") {
-    const body = new THREE.Mesh(new THREE.BoxGeometry(1.94, 0.48, 4.4), bodyMat);
-    body.position.set(0, 0.32, 0); body.castShadow = true;
-    const hood = new THREE.Mesh(new THREE.BoxGeometry(1.84, 0.28, 1.6), bodyMat);
-    hood.position.set(0, 0.46, 1.4); hood.rotation.x = 0.12;
-    bodyHolder.add(body, hood);
-
-    // Large Vertical Kidney Grille Slats
-    [-0.22, 0.22].forEach(x => {
-      const grille = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.38, 0.06), blackTrimMat);
-      grille.position.set(x, 0.4, 2.22); bodyHolder.add(grille);
-    });
-
-    // Contoured Carbon Fiber Roof
-    const roof = new THREE.Mesh(new THREE.BoxGeometry(1.52, 0.06, 1.5), blackTrimMat);
-    roof.position.set(0, 1.1, -0.22); bodyHolder.add(roof);
-    const glass = new THREE.Mesh(new THREE.BoxGeometry(1.58, 0.54, 2.05), glassMat);
-    glass.position.set(0, 0.83, -0.15); bodyHolder.add(glass);
-  }
-
-  // -------------------------------------------------------------
-  // MODEL 8: PORSCHE 911 GT3 RS (Track Weapon)
-  // -------------------------------------------------------------
-  else if (k === "gt3rs") {
-    const body = new THREE.Mesh(new THREE.BoxGeometry(1.94, 0.46, 4.38), bodyMat);
-    body.position.set(0, 0.31, 0); body.castShadow = true;
-    const hood = new THREE.Mesh(new THREE.BoxGeometry(1.82, 0.26, 1.55), bodyMat);
-    hood.position.set(0, 0.44, 1.4); hood.rotation.x = 0.16;
-    bodyHolder.add(body, hood);
-
-    // Hood Aerodynamic Nostrils
-    [-0.32, 0.32].forEach(x => {
-      const vent = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.06, 0.45), blackTrimMat);
-      vent.position.set(x, 0.56, 1.42); bodyHolder.add(vent);
-    });
-
-    // Teardrop Glass & Roof
-    const glass = new THREE.Mesh(new THREE.BoxGeometry(1.54, 0.55, 2.15), glassMat);
-    glass.position.set(0, 0.84, -0.15); bodyHolder.add(glass);
-    const roof = new THREE.Mesh(new THREE.BoxGeometry(1.44, 0.05, 1.4), bodyMat);
-    roof.position.set(0, 1.12, -0.24); bodyHolder.add(roof);
-  }
-
-  // -------------------------------------------------------------
-  // MODEL 9: LAMBORGHINI AVENTADOR (V12 Hypercar Wedge)
-  // -------------------------------------------------------------
-  else if (k === "aventador") {
-    const wedge = new THREE.Mesh(new THREE.BoxGeometry(2.05, 0.38, 4.5), bodyMat);
-    wedge.position.set(0, 0.26, 0); wedge.castShadow = true;
-    const lowNose = new THREE.Mesh(new THREE.BoxGeometry(1.92, 0.22, 1.7), bodyMat);
-    lowNose.position.set(0, 0.34, 1.45); lowNose.rotation.x = 0.24;
-    bodyHolder.add(wedge, lowNose);
-
-    // Stealth Angular Canopy
-    const glass = new THREE.Mesh(new THREE.BoxGeometry(1.48, 0.44, 1.9), glassMat);
-    glass.position.set(0, 0.7, -0.12); bodyHolder.add(glass);
-    const roof = new THREE.Mesh(new THREE.BoxGeometry(1.36, 0.05, 1.35), bodyMat);
-    roof.position.set(0, 0.93, -0.18); bodyHolder.add(roof);
-
-    // Triangular Side Radiator Scoops
-    [-0.98, 0.98].forEach(x => {
-      const scoop = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.32, 0.95), blackTrimMat);
-      scoop.position.set(x, 0.34, -0.35); bodyHolder.add(scoop);
-    });
-
-    // Huge Center Hexagonal Exhaust Pipe
-    const hexEx = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.16, 0.2), new THREE.MeshStandardMaterial({ color: 0x52525b, metalness: 0.9 }));
-    hexEx.position.set(0, 0.34, -2.26); bodyHolder.add(hexEx);
-  }
-
-  // -------------------------------------------------------------
-  // MODEL 10: TOYOTA SUPRA MK5 (Double-Bubble Sports Legend)
-  // -------------------------------------------------------------
-  else if (k === "supra") {
-    const body = new THREE.Mesh(new THREE.BoxGeometry(1.92, 0.46, 4.3), bodyMat);
-    body.position.set(0, 0.31, 0); body.castShadow = true;
-    const hood = new THREE.Mesh(new THREE.BoxGeometry(1.82, 0.28, 1.55), bodyMat);
-    hood.position.set(0, 0.45, 1.35); hood.rotation.x = 0.14;
-    bodyHolder.add(body, hood);
-
-    // Double-Bubble Roof
-    [-0.32, 0.32].forEach(x => {
-      const bubble = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.08, 1.35), bodyMat);
-      bubble.position.set(x, 1.08, -0.22); bodyHolder.add(bubble);
-    });
-    const glass = new THREE.Mesh(new THREE.BoxGeometry(1.54, 0.52, 1.95), glassMat);
-    glass.position.set(0, 0.82, -0.15); bodyHolder.add(glass);
-
-    // Integrated Ducktail Lip Spoiler
-    const ducktail = new THREE.Mesh(new THREE.BoxGeometry(1.78, 0.14, 0.16), bodyMat);
-    ducktail.position.set(0, 0.62, -2.12); ducktail.rotation.x = -0.3;
-    bodyHolder.add(ducktail);
-  }
-
-  // -------------------------------------------------------------
-  // SHARED ACCESSORIES & AERO
-  // -------------------------------------------------------------
-  // Active / GT Rear Wing
-  if (currentConfig.hasSpoiler) {
-    const wingGroup = new THREE.Group();
-    const wingY = (k === "gt3rs" || k === "aventador") ? 0.95 : 0.72;
-    wingGroup.position.set(0, wingY, -2.05);
-
-    const bladeWidth = (k === "gt3rs") ? 2.15 : 1.92;
-    const blade = new THREE.Mesh(new THREE.BoxGeometry(bladeWidth, 0.05, 0.38), blackTrimMat);
-    wingGroup.add(blade);
-
-    [-0.55, 0.55].forEach(x => {
-      const strut = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.32, 0.18), new THREE.MeshStandardMaterial({ color: 0x333333 }));
-      strut.position.set(x, -0.16, 0); wingGroup.add(strut);
-    });
-    bodyHolder.add(wingGroup);
-  }
-
-  // Roof Cargo Box
-  if (currentConfig.hasRoofBox) {
-    const box = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.24, 1.6), bodyMat);
-    box.position.set(0, 1.35, -0.25);
-    bodyHolder.add(box);
-  }
-
-  // Dive Canards
-  if (currentConfig.hasCanards) {
-    [-0.98, 0.98].forEach((x, idx) => {
-      const canard = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.025, 0.32), blackTrimMat);
-      canard.position.set(x, 0.28, 2.02);
-      canard.rotation.z = idx === 0 ? 0.28 : -0.28;
-      bodyHolder.add(canard);
-    });
-  }
-
-  // -------------------------------------------------------------
-  // 4 WHEELS + TIRES + BRAKE CALIPERS
-  // -------------------------------------------------------------
-  const camberRad = ((currentConfig.camber || 0) * Math.PI) / 180;
-  const isOffroader = k === "thar" || k === "scorpio";
-  const tireRadius = isOffroader ? 0.44 : 0.38;
-  const tireWidth = isOffroader ? 0.32 : 0.28;
-
-  const positions = [
-    [-0.98, 0.38, 1.35],
-    [0.98, 0.38, 1.35],
-    [-0.98, 0.38, -1.35],
-    [0.98, 0.38, -1.35]
-  ];
-
-  positions.forEach(pos => {
-    const isLeft = pos[0] < 0;
-    const wHolder = new THREE.Group();
-    wHolder.position.set(pos[0], pos[1], pos[2]);
-    wHolder.rotation.z = isLeft ? -camberRad : camberRad;
-
-    const spinGroup = new THREE.Group();
-
-    // Tire Rubber
-    const tire = new THREE.Mesh(
-      new THREE.CylinderGeometry(tireRadius, tireRadius, tireWidth, 32),
-      new THREE.MeshStandardMaterial({ color: 0x181818, roughness: 0.85 })
-    );
-    tire.rotation.z = Math.PI / 2;
-    tire.castShadow = true;
-
-    // Alloy Rim
-    const rim = new THREE.Mesh(
-      new THREE.CylinderGeometry(tireRadius * 0.68, tireRadius * 0.68, tireWidth + 0.01, 24),
-      new THREE.MeshStandardMaterial({
-        color: wheelColorHex,
-        metalness: 0.85,
-        roughness: 0.25
-      })
-    );
-    rim.rotation.z = Math.PI / 2;
-
-    spinGroup.add(tire, rim);
-    wHolder.add(spinGroup);
-    wheelMeshes.push(spinGroup);
-
-    // Brake Caliper
-    const caliper = new THREE.Mesh(
-      new THREE.BoxGeometry(0.08, 0.14, 0.12),
-      new THREE.MeshStandardMaterial({ color: 0xff3b30 })
-    );
-    caliper.position.set(isLeft ? 0.07 : -0.07, 0.12, 0.08);
-    wHolder.add(caliper);
-
-    carGroup.add(wHolder);
-  });
-
-  // Update live badge text
-  document.getElementById("badgeCarName").textContent = currentConfig.name;
-  document.getElementById("badgeCategory").textContent = currentConfig.category;
-}
-
-// ============================================================================
-// 4. USER ACTIONS & MODIFICATIONS
-// ============================================================================
-function loadCar() {
-  const selKey = document.getElementById("carSelect").value;
-  if (!CAR_DATABASE[selKey]) return;
-  currentKey = selKey;
-  currentConfig = { ...CAR_DATABASE[selKey] };
-
-  // Sync inputs with car defaults
-  document.getElementById("paint").value = currentConfig.defaultColor;
-  document.getElementById("wheelColor").value = currentConfig.defaultRims;
-  document.getElementById("finish").value = currentConfig.finish;
-  document.getElementById("stanceRange").value = currentConfig.rideHeight;
-  document.getElementById("camberRange").value = currentConfig.camber;
-
-  syncAccessoryButtons();
-  rebuildCurrentCar();
-}
-
-function changePaint() {
-  currentConfig.defaultColor = document.getElementById("paint").value;
-  rebuildCurrentCar();
-}
-
-function changeWheels() {
-  currentConfig.defaultRims = document.getElementById("wheelColor").value;
-  rebuildCurrentCar();
-}
-
-function changeFinish() {
-  currentConfig.finish = document.getElementById("finish").value;
-  rebuildCurrentCar();
-}
-
-function changeStance(val) {
-  currentConfig.rideHeight = parseFloat(val);
-  rebuildCurrentCar();
-}
-
-function changeCamber(val) {
-  currentConfig.camber = parseFloat(val);
-  rebuildCurrentCar();
-}
-
-function toggleSpoiler() {
-  currentConfig.hasSpoiler = !currentConfig.hasSpoiler;
-  syncAccessoryButtons();
-  rebuildCurrentCar();
-}
-
-function toggleRoofBox() {
-  currentConfig.hasRoofBox = !currentConfig.hasRoofBox;
-  syncAccessoryButtons();
-  rebuildCurrentCar();
-}
-
-function toggleCanards() {
-  currentConfig.hasCanards = !currentConfig.hasCanards;
-  syncAccessoryButtons();
-  rebuildCurrentCar();
-}
-
-function toggleWidebody() {
-  currentConfig.widebody = currentConfig.widebody > 0.6 ? 0.35 : 0.85;
-  syncAccessoryButtons();
-  rebuildCurrentCar();
-}
-
-function syncAccessoryButtons() {
-  const setBtn = (id, active) => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.style.borderColor = active ? "#ff3b30" : "#383838";
-    el.style.color = active ? "#ff3b30" : "#e5e5e5";
-    el.style.background = active ? "rgba(255, 59, 48, 0.12)" : "#222222";
-  };
-  setBtn("btnSpoiler", currentConfig.hasSpoiler);
-  setBtn("btnRoofBox", currentConfig.hasRoofBox);
-  setBtn("btnCanards", currentConfig.hasCanards);
-  setBtn("btnWide", currentConfig.widebody > 0.6);
-}
-
-function toggleTurntable() {
-  isTurntableActive = !isTurntableActive;
-  const btn = document.getElementById("btnRotate");
-  btn.style.color = isTurntableActive ? "#ff3b30" : "#e5e5e5";
-  btn.style.borderColor = isTurntableActive ? "#ff3b30" : "#383838";
-}
-
-function rotateCar() {
-  toggleTurntable();
-}
-
-function resetCamera() {
-  isCockpitView = false;
-  camera.position.set(5.5, 2.8, 6.5);
-  controls.target.set(0, 0.4, 0);
-  controls.update();
-  document.getElementById("btnCockpit").textContent = "💺 COCKPIT VIEW";
-}
-
-function toggleCockpitView() {
-  isCockpitView = !isCockpitView;
-  const btn = document.getElementById("btnCockpit");
-  if (isCockpitView) {
-    camera.position.set(-0.35, 1.25, -0.1);
-    controls.target.set(-0.35, 1.05, 1.5);
-    btn.textContent = "🚗 EXTERIOR VIEW";
-    btn.style.color = "#ff3b30";
-  } else {
-    resetCamera();
-  }
-  controls.update();
-}
-
-// ============================================================================
-// 5. 4D WIND TUNNEL & PROCEDURAL WEB AUDIO
-// ============================================================================
-function toggle4DWind() {
-  isWindActive = !isWindActive;
-  const btn = document.getElementById("btnWind");
-  const hud = document.getElementById("hudSpeed");
-
-  if (isWindActive) {
-    btn.style.background = "#0284c7";
-    btn.style.color = "#fff";
-    hud.style.display = "block";
-    createStreamlines();
-  } else {
-    btn.style.background = "#222";
-    btn.style.color = "#38bdf8";
-    hud.style.display = "none";
-    streamlines.forEach(l => scene.remove(l));
-    streamlines = [];
-  }
-}
-
-function createStreamlines() {
-  streamlines.forEach(l => scene.remove(l));
-  streamlines = [];
-  const lineMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.75 });
-
-  [-0.75, -0.3, 0.3, 0.75].forEach((x, i) => {
-    const line = new THREE.Mesh(new THREE.BoxGeometry(0.025, 0.025, 1.8), lineMat);
-    line.position.set(x, 0.95 + (i % 2) * 0.25, 3.2 - i * 0.5);
-    scene.add(line);
-    streamlines.push(line);
-  });
-}
-
-// Procedural Engine Revving Audio
-let audioCtx = null;
-let osc = null;
-let gainNode = null;
-
-function initAudio() {
-  if (audioCtx) return;
-  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  osc = audioCtx.createOscillator();
-  gainNode = audioCtx.createGain();
-
-  osc.type = "sawtooth";
-  osc.frequency.setValueAtTime(80, audioCtx.currentTime);
-  gainNode.gain.setValueAtTime(0.001, audioCtx.currentTime);
-
-  osc.connect(gainNode);
-  gainNode.connect(audioCtx.destination);
-  osc.start();
-}
-
-function startRev() {
-  initAudio();
-  if (!audioCtx) return;
-  const targetPitch = currentConfig.sound === "v10" ? 420 : (currentConfig.sound === "v8" ? 220 : 160);
-  osc.frequency.setTargetAtTime(targetPitch, audioCtx.currentTime, 0.15);
-  gainNode.gain.setTargetAtTime(0.18, audioCtx.currentTime, 0.08);
-}
-
-function stopRev() {
-  if (!audioCtx) return;
-  osc.frequency.setTargetAtTime(75, audioCtx.currentTime, 0.25);
-  gainNode.gain.setTargetAtTime(0.001, audioCtx.currentTime, 0.15);
-}
-
-// ============================================================================
-// 6. GARAGE SAVING & EXPORT
-// ============================================================================
-function getGarage() {
-  try {
-    return JSON.parse(localStorage.getItem("carGuyGarage") || "[]");
-  } catch (e) {
-    return [];
-  }
-}
-
-function updateGarageNavCount() {
-  const g = getGarage();
-  const el = document.getElementById("garageNavCount");
-  if (el) el.textContent = g.length;
-}
-
-function saveDesign() {
-  const g = getGarage();
-  const item = {
-    id: Date.now(),
-    key: currentKey,
-    config: { ...currentConfig },
-    date: new Date().toLocaleDateString()
-  };
-  g.push(item);
-  localStorage.setItem("carGuyGarage", JSON.stringify(g));
-  updateGarageNavCount();
-  alert(`Design saved to your Garage! (${currentConfig.name})`);
-}
-
-function openGarageModal() {
-  const g = getGarage();
-  const list = document.getElementById("garageList");
-  list.innerHTML = "";
-
-  if (g.length === 0) {
-    list.innerHTML = "<div style='color:#888; text-align:center; padding:20px;'>Your Garage is empty. Save your custom build!</div>";
-  } else {
-    g.forEach((item, index) => {
-      const card = document.createElement("div");
-      card.style.cssText = "background:#1e1e1e; border:1px solid #333; border-radius:10px; padding:12px; display:flex; justify-content:space-between; align-items:center;";
-      card.innerHTML = `
-        <div>
-          <div style="font-weight:bold; color:#fff;">${item.config.name}</div>
-          <div style="font-size:11px; color:#888;">Saved on ${item.date} • Color: ${item.config.defaultColor}</div>
+      <!-- TAB: CHASSIS & CAR MODELS -->
+      <div id="pane-models" class="tab-pane space-y-3 text-xs">
+        <div class="font-bold uppercase tracking-wider opacity-60">Select Vehicle Chassis</div>
+        <div class="grid grid-cols-2 gap-2">
+          <!-- GT Coupe -->
+          <button onclick="selectCarModel('coupe')" id="card-model-coupe" class="model-card p-2.5 rounded-xl border-2 border-blue-600 bg-blue-50/70 text-left transition hover:border-blue-500 shadow-sm">
+            <div class="text-xl mb-1">🏎️</div>
+            <div class="font-bold text-slate-800 text-[11px]">GT Supercar</div>
+            <div class="text-[9px] text-slate-500 mt-0.5">Classic track coupe with active GT aero</div>
+          </button>
+
+          <!-- Formula 1 -->
+          <button onclick="selectCarModel('f1')" id="card-model-f1" class="model-card p-2.5 rounded-xl border border-slate-200 bg-white/70 text-left transition hover:border-blue-500 shadow-sm">
+            <div class="text-xl mb-1">🏁</div>
+            <div class="font-bold text-slate-800 text-[11px]">Formula 1</div>
+            <div class="text-[9px] text-slate-500 mt-0.5">Monocoque, halo, front F1 wing & sidepods</div>
+          </button>
+
+          <!-- Hypercar Wedge -->
+          <button onclick="selectCarModel('hypercar')" id="card-model-hypercar" class="model-card p-2.5 rounded-xl border border-slate-200 bg-white/70 text-left transition hover:border-blue-500 shadow-sm">
+            <div class="text-xl mb-1">⚡</div>
+            <div class="font-bold text-slate-800 text-[11px]">Hypercar Wedge</div>
+            <div class="text-[9px] text-slate-500 mt-0.5">Mid-engine wedge with roof air scoop</div>
+          </button>
+
+          <!-- Safari SUV -->
+          <button onclick="selectCarModel('suv')" id="card-model-suv" class="model-card p-2.5 rounded-xl border border-slate-200 bg-white/70 text-left transition hover:border-blue-500 shadow-sm">
+            <div class="text-xl mb-1">🚙</div>
+            <div class="font-bold text-slate-800 text-[11px]">Safari SUV</div>
+            <div class="text-[9px] text-slate-500 mt-0.5">Rugged lifted safari with rear spare tire</div>
+          </button>
+
+          <!-- Muscle Car -->
+          <button onclick="selectCarModel('muscle')" id="card-model-muscle" class="model-card p-2.5 rounded-xl border border-slate-200 bg-white/70 text-left transition hover:border-blue-500 shadow-sm">
+            <div class="text-xl mb-1">🔥</div>
+            <div class="font-bold text-slate-800 text-[11px]">American Muscle</div>
+            <div class="text-[9px] text-slate-500 mt-0.5">Bulging shaker hood scoop & ducktail</div>
+          </button>
+
+          <!-- Speedster Spyder -->
+          <button onclick="selectCarModel('speedster')" id="card-model-speedster" class="model-card p-2.5 rounded-xl border border-slate-200 bg-white/70 text-left transition hover:border-blue-500 shadow-sm">
+            <div class="text-xl mb-1">✨</div>
+            <div class="font-bold text-slate-800 text-[11px]">Speedster Spyder</div>
+            <div class="text-[9px] text-slate-500 mt-0.5">Open-top roadster with dual aero cowls</div>
+          </button>
         </div>
-        <div style="display:flex; gap:6px;">
-          <button onclick="loadGarageItem(${index})" class="btn-primary" style="padding:6px 12px; font-size:11px; width:auto;">Load</button>
-          <button onclick="deleteGarageItem(${index})" class="btn-secondary" style="padding:6px 12px; font-size:11px; width:auto; color:#ef4444;">Delete</button>
+      </div>
+
+      <!-- TAB: PAINT & LIVERY -->
+      <div id="pane-paint" class="tab-pane hidden space-y-3 text-xs">
+        <div class="font-bold uppercase tracking-wider opacity-60">Body Paint & Finish</div>
+        <div class="flex gap-2 flex-wrap items-center">
+          <button onclick="updateCfg({bodyColor:'#2563eb'})" class="w-7 h-7 rounded-full border-2 border-white shadow bg-blue-600"></button>
+          <button onclick="updateCfg({bodyColor:'#ef4444'})" class="w-7 h-7 rounded-full border-2 border-white shadow bg-red-500"></button>
+          <button onclick="updateCfg({bodyColor:'#16a34a'})" class="w-7 h-7 rounded-full border-2 border-white shadow bg-green-600"></button>
+          <button onclick="updateCfg({bodyColor:'#f59e0b'})" class="w-7 h-7 rounded-full border-2 border-white shadow bg-amber-500"></button>
+          <button onclick="updateCfg({bodyColor:'#ec4899'})" class="w-7 h-7 rounded-full border-2 border-white shadow bg-pink-500"></button>
+          <button onclick="updateCfg({bodyColor:'#ffffff'})" class="w-7 h-7 rounded-full border-2 border-slate-300 shadow bg-white"></button>
+          <input type="color" id="inp-color" value="#2563eb" onchange="updateCfg({bodyColor:this.value})" class="w-7 h-7 rounded cursor-pointer" />
         </div>
-      `;
-      list.appendChild(card);
-    });
-  }
+        <div class="grid grid-cols-3 gap-1.5">
+          <button onclick="updateCfg({finish:'gloss'})" class="py-1.5 rounded-lg border font-semibold hover:bg-blue-50">Gloss</button>
+          <button onclick="updateCfg({finish:'matte'})" class="py-1.5 rounded-lg border font-semibold hover:bg-blue-50">Matte</button>
+          <button onclick="updateCfg({finish:'metallic'})" class="py-1.5 rounded-lg border font-semibold hover:bg-blue-50">Metallic</button>
+        </div>
 
-  document.getElementById("modalGarage").classList.add("active");
-}
+        <div class="font-bold uppercase tracking-wider opacity-60 pt-1">Racing Livery Stripes</div>
+        <div class="grid grid-cols-3 gap-1.5">
+          <button onclick="updateCfg({livery:'none'})" class="py-1.5 rounded-lg border font-semibold hover:bg-blue-50">None</button>
+          <button onclick="updateCfg({livery:'single'})" class="py-1.5 rounded-lg border font-semibold hover:bg-blue-50">Single</button>
+          <button onclick="updateCfg({livery:'dual'})" class="py-1.5 rounded-lg border font-semibold hover:bg-blue-50">Dual GT</button>
+        </div>
 
-function closeGarageModal() {
-  document.getElementById("modalGarage").classList.remove("active");
-}
+        <div class="font-bold uppercase tracking-wider opacity-60 pt-1">Studio Inspection Mode</div>
+        <div class="grid grid-cols-3 gap-1.5">
+          <button onclick="updateCfg({inspectMode:'render'})" class="py-1.5 rounded-lg border font-semibold hover:bg-blue-50">Full Paint</button>
+          <button onclick="updateCfg({inspectMode:'clay'})" class="py-1.5 rounded-lg border font-semibold hover:bg-blue-50">Clay Model</button>
+          <button onclick="updateCfg({inspectMode:'wireframe'})" class="py-1.5 rounded-lg border font-semibold hover:bg-blue-50">CAD Mesh</button>
+        </div>
+      </div>
 
-function loadGarageItem(index) {
-  const g = getGarage();
-  if (!g[index]) return;
-  const item = g[index];
-  currentKey = item.key;
-  currentConfig = { ...item.config };
-  document.getElementById("carSelect").value = currentKey;
+      <!-- TAB: BODY & AERO -->
+      <div id="pane-aero" class="tab-pane hidden space-y-3 text-xs">
+        <div class="font-bold uppercase tracking-wider opacity-60">Rear Wing & Aero Sculptor</div>
+        <div class="grid grid-cols-2 gap-1.5">
+          <button onclick="updateCfg({spoiler:'none'})" class="py-1.5 rounded-lg border font-bold">Clean Deck</button>
+          <button onclick="updateCfg({spoiler:'gt'})" class="py-1.5 rounded-lg border font-bold">Active GT Wing</button>
+        </div>
+        <label class="block">Wing Height
+          <input type="range" id="rng-wing-height" min="0" max="1" step="0.05" value="0.5" oninput="updateCfg({wingHeight:+this.value})" class="w-full" />
+        </label>
+        <label class="block">Widebody Flare
+          <input type="range" id="rng-widebody" min="0" max="1" step="0.05" value="0.4" oninput="updateCfg({widebody:+this.value})" class="w-full" />
+        </label>
+        <label class="block">Front Splitter Extension
+          <input type="range" id="rng-splitter" min="0" max="1" step="0.05" value="0.5" oninput="updateCfg({splitter:+this.value})" class="w-full" />
+        </label>
+      </div>
 
-  document.getElementById("paint").value = currentConfig.defaultColor;
-  document.getElementById("wheelColor").value = currentConfig.defaultRims;
-  document.getElementById("finish").value = currentConfig.finish;
-  document.getElementById("stanceRange").value = currentConfig.rideHeight;
-  document.getElementById("camberRange").value = currentConfig.camber;
+      <!-- TAB: STANCE & WHEELS -->
+      <div id="pane-stance" class="tab-pane hidden space-y-3 text-xs">
+        <div class="font-bold uppercase tracking-wider opacity-60">Suspension & Wheel Geometry</div>
+        <label class="block">Ride Height (-40mm to +25mm)
+          <input type="range" id="rng-ride-height" min="-40" max="25" value="0" oninput="updateCfg({rideHeight:+this.value})" class="w-full" />
+        </label>
+        <label class="block">Wheel Diameter (18" to 22")
+          <input type="range" id="rng-wheel-size" min="18" max="22" value="20" oninput="updateCfg({wheelSize:+this.value})" class="w-full" />
+        </label>
+        <label class="block">Track Camber Angle (0° to -8°)
+          <input type="range" id="rng-camber" min="-8" max="0" step="0.5" value="-2" oninput="updateCfg({camber:+this.value})" class="w-full" />
+        </label>
+        <div class="font-bold uppercase tracking-wider opacity-60">Rim Finish</div>
+        <div class="flex gap-2">
+          <button onclick="updateCfg({rimColor:'#e2e8f0'})" class="w-7 h-7 rounded-full border shadow bg-slate-200"></button>
+          <button onclick="updateCfg({rimColor:'#ffffff'})" class="w-7 h-7 rounded-full border shadow bg-white"></button>
+          <button onclick="updateCfg({rimColor:'#d97706'})" class="w-7 h-7 rounded-full border shadow bg-amber-600"></button>
+          <button onclick="updateCfg({rimColor:'#475569'})" class="w-7 h-7 rounded-full border shadow bg-slate-600"></button>
+        </div>
+      </div>
 
-  syncAccessoryButtons();
-  rebuildCurrentCar();
-  closeGarageModal();
-}
+      <!-- TAB: FAMOUS ACCESSORIES & EXHAUST -->
+      <div id="pane-parts" class="tab-pane hidden space-y-3 text-xs">
+        <div class="font-bold uppercase tracking-wider opacity-60">Famous Car Accessories</div>
+        <label class="flex items-center justify-between p-2 rounded-xl border bg-white/60 cursor-pointer">
+          <span class="font-semibold">Aerodynamic Roof Cargo Box</span>
+          <input type="checkbox" id="chk-roofbox" onchange="updateCfg({roofBox:this.checked})" />
+        </label>
+        <label class="flex items-center justify-between p-2 rounded-xl border bg-white/60 cursor-pointer">
+          <span class="font-semibold">Carbon Front Dive Canards</span>
+          <input type="checkbox" id="chk-canards" checked onchange="updateCfg({canards:this.checked})" />
+        </label>
+        <label class="flex items-center justify-between p-2 rounded-xl border bg-white/60 cursor-pointer">
+          <span class="font-semibold">Titanium Interior Roll Cage</span>
+          <input type="checkbox" id="chk-rollcage" onchange="updateCfg({rollCage:this.checked})" />
+        </label>
 
-function deleteGarageItem(index) {
-  const g = getGarage();
-  g.splice(index, 1);
-  localStorage.setItem("carGuyGarage", JSON.stringify(g));
-  updateGarageNavCount();
-  openGarageModal();
-}
+        <div class="font-bold uppercase tracking-wider opacity-60 pt-1">Exhaust Sound Profile</div>
+        <div class="grid grid-cols-2 gap-1.5">
+          <button onclick="updateCfg({exhaustProfile:'v8'})" class="py-1.5 rounded-lg border font-bold">Muscle V8</button>
+          <button onclick="updateCfg({exhaustProfile:'v10'})" class="py-1.5 rounded-lg border font-bold">Screaming V10</button>
+          <button onclick="updateCfg({exhaustProfile:'turbo'})" class="py-1.5 rounded-lg border font-bold">Twin-Turbo</button>
+          <button onclick="updateCfg({exhaustProfile:'ev'})" class="py-1.5 rounded-lg border font-bold">Hyper-EV</button>
+        </div>
+      </div>
 
-function export3DModel() {
-  const exporter = new THREE.GLTFExporter();
-  exporter.parse(
-    carGroup,
-    glb => {
-      const blob = new Blob([glb], { type: "model/gltf-binary" });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = `${currentConfig.name.replace(/\s+/g, "_")}.glb`;
-      link.click();
-    },
-    { binary: true }
-  );
-}
+      <!-- TAB: INTERIOR COCKPIT -->
+      <div id="pane-cabin" class="tab-pane hidden space-y-3 text-xs">
+        <div class="font-bold uppercase tracking-wider opacity-60">Cabin Leather Upholstery</div>
+        <div class="grid grid-cols-2 gap-1.5">
+          <button onclick="updateCfg({seatColor:'tan'})" class="py-1.5 rounded-lg border font-bold">Saddle Tan</button>
+          <button onclick="updateCfg({seatColor:'ivory'})" class="py-1.5 rounded-lg border font-bold">Ivory White</button>
+          <button onclick="updateCfg({seatColor:'crimson'})" class="py-1.5 rounded-lg border font-bold">Crimson Red</button>
+          <button onclick="updateCfg({seatColor:'slate'})" class="py-1.5 rounded-lg border font-bold">Slate Grey</button>
+        </div>
+        <div class="font-bold uppercase tracking-wider opacity-60 pt-1">Cabin Ambient LED Strip</div>
+        <div class="flex gap-2">
+          <button onclick="updateCfg({ambientColor:'#38bdf8'})" class="w-7 h-7 rounded-full border shadow bg-sky-400"></button>
+          <button onclick="updateCfg({ambientColor:'#f97316'})" class="w-7 h-7 rounded-full border shadow bg-orange-500"></button>
+          <button onclick="updateCfg({ambientColor:'#10b981'})" class="w-7 h-7 rounded-full border shadow bg-emerald-500"></button>
+          <button onclick="updateCfg({ambientColor:'#ec4899'})" class="w-7 h-7 rounded-full border shadow bg-pink-500"></button>
+        </div>
+      </div>
 
-function takeScreenshot() {
-  renderer.render(scene, camera);
-  const dataURL = canvas.toDataURL("image/png");
-  const link = document.createElement("a");
-  link.href = dataURL;
-  link.download = `${currentConfig.name.replace(/\s+/g, "_")}_CAR_GUY.png`;
-  link.click();
-}
+      <!-- SAVE & EXPORT FOOTER -->
+      <div class="mt-auto pt-3 border-t border-black/10">
+        <div class="grid grid-cols-3 gap-1.5">
+          <button onclick="saveToGarage()" class="py-2 rounded-lg text-[11px] font-bold bg-blue-600 text-white">💾 Save</button>
+          <button onclick="downloadPNG()" class="py-2 rounded-lg text-[11px] font-bold border bg-white/80">🖼️ PNG</button>
+          <button onclick="exportGLB()" class="py-2 rounded-lg text-[11px] font-bold border bg-white/80">📦 .GLB</button>
+        </div>
+      </div>
+    </aside>
 
-// ============================================================================
-// 7. GEMINI AI CO-PILOT INTEGRATION (Default Smart Engine + Gemini 2.0 / 2.5 Flash)
-// ============================================================================
-let userGeminiApiKey = localStorage.getItem("carGuyGeminiKey") || "";
+    <!-- CENTER 3D VIEWPORT -->
+    <div id="viewport" class="flex-1 relative">
+      <!-- LIVE MODEL NAMEPLATE + AI NAME GENERATOR -->
+      <div class="absolute top-4 left-1/2 -translate-x-1/2 z-10 px-3 py-1.5 rounded-2xl border border-slate-200 bg-white/90 backdrop-blur-xl shadow-md flex items-center gap-2">
+        <span class="text-[10px] font-black uppercase tracking-widest opacity-60">Model</span>
+        <input id="inp-model-name" value="Aero GT-01" maxlength="16" oninput="updateCfg({modelName:this.value})" class="bg-transparent font-black text-sm tracking-wide w-36 focus:outline-none border-b border-dashed border-slate-400" />
+        <button onclick="generateCarName()" class="px-2.5 py-1 rounded-xl text-[10px] font-bold bg-blue-600 text-white">✨ AI Name</button>
+      </div>
 
-const GEMINI_MODELS = [
-  { ver: "v1beta", model: "gemini-2.0-flash" },
-  { ver: "v1beta", model: "gemini-2.5-flash" },
-  { ver: "v1beta", model: "gemini-1.5-flash-latest" },
-  { ver: "v1beta", model: "gemini-1.5-flash" }
-];
+      <!-- BOTTOM EXHAUST REV & 4D SPEED BAR -->
+      <div class="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 px-4 py-2.5 rounded-2xl border border-slate-200 bg-white/90 backdrop-blur-xl shadow-lg flex items-center gap-4">
+        <button onclick="toggleMute()" id="btn-mute" class="p-2 rounded-xl border bg-white/70 text-xs">🔊</button>
+        <button
+          onmousedown="setRevving(true)"
+          onmouseup="setRevving(false)"
+          onmouseleave="setRevving(false)"
+          ontouchstart="setRevving(true)"
+          ontouchend="setRevving(false)"
+          id="btn-rev"
+          class="px-4 py-2 rounded-xl text-xs font-black tracking-wide bg-blue-600 text-white active:scale-95 transition"
+        >
+          HOLD TO REV (V10)
+        </button>
+        <div class="text-xs font-mono font-bold text-orange-600"><span id="rpm-readout">1200</span> RPM</div>
+        <div id="speed-control" class="hidden items-center gap-2 text-xs font-bold border-l pl-3">
+          <span><span id="speed-readout">140</span> km/h</span>
+          <input type="range" min="0" max="320" value="140" oninput="setSpeed(+this.value)" class="w-24" />
+        </div>
+        <button onclick="resetCar()" class="p-2 rounded-xl border bg-white/70 text-xs" title="Reset Car">🔄</button>
+      </div>
+    </div>
 
-function initGeminiKeyUI() {
-  const inp = document.getElementById("geminiApiKeyInput");
-  if (inp && userGeminiApiKey) {
-    inp.value = userGeminiApiKey;
-    updateGeminiStatusBadge(true, "Custom Key Saved");
-  } else {
-    updateGeminiStatusBadge(false);
-  }
-}
+    <!-- RIGHT GEMINI AI DESIGN MENTOR -->
+    <aside class="w-80 m-3 rounded-2xl border border-slate-200 bg-white/90 backdrop-blur-xl p-4 flex flex-col gap-3 z-10 shadow-lg">
+      <div class="flex items-center justify-between">
+        <div class="font-black text-xs text-blue-700">✨ GEMINI AI DESIGN MENTOR</div>
+        <span id="api-badge" class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 font-bold">DEMO MODE</span>
+      </div>
 
-function updateGeminiStatusBadge(hasCustomKey, modelName) {
-  const dot = document.getElementById("geminiEngineStatusDot");
-  const txt = document.getElementById("geminiEngineStatusText");
-  if (!dot || !txt) return;
-  if (hasCustomKey) {
-    dot.style.background = "#38bdf8";
-    txt.style.color = "#38bdf8";
-    txt.textContent = modelName ? `Gemini Cloud Engine (${modelName})` : "Custom Gemini Cloud Engine Active";
-  } else {
-    dot.style.background = "#10b981";
-    txt.style.color = "#10b981";
-    txt.textContent = "Default Gemini Smart Engine (Active & Free)";
-  }
-}
+      <div class="flex flex-wrap gap-1">
+        <button onclick="askGemini('Red Bull F1 Aero Spec')" class="text-[10px] px-2 py-1 rounded-lg border bg-white/80 hover:bg-white font-semibold text-blue-700">🏎️ Red Bull F1</button>
+        <button onclick="askGemini('Porsche GT3 Track Spec')" class="text-[10px] px-2 py-1 rounded-lg border bg-white/80 hover:bg-white font-semibold">🏁 Porsche GT3</button>
+        <button onclick="askGemini('Stealth Blackout V8')" class="text-[10px] px-2 py-1 rounded-lg border bg-white/80 hover:bg-white font-semibold">🦇 Stealth V8</button>
+        <button onclick="askGemini('Slammed Drift Spec')" class="text-[10px] px-2 py-1 rounded-lg border bg-white/80 hover:bg-white font-semibold">⚡ Drift Spec</button>
+        <button onclick="askGemini('Coastal Cruiser + Roof Box')" class="text-[10px] px-2 py-1 rounded-lg border bg-white/80 hover:bg-white font-semibold">🏖️ Coastal Wagon</button>
+        <button onclick="askGemini('Critique My Aero')" class="text-[10px] px-2 py-1 rounded-lg border bg-white/80 hover:bg-white font-semibold">💨 Aero Critique</button>
+      </div>
 
-function toggleKeySettings() {
-  const sec = document.getElementById("apiKeySection");
-  if (!sec) return;
-  sec.style.display = sec.style.display === "none" ? "block" : "none";
-}
+      <div id="ai-box" class="flex-1 overflow-y-auto rounded-xl bg-white/70 p-3 text-xs leading-relaxed border space-y-2">
+        <div>Welcome to <b>THE CAR MODLING</b>! The 3D car model directly follows your Gemini commands in real time.</div>
+        <div class="p-2 rounded-lg bg-blue-50/80 border border-blue-200 text-[11px] text-blue-900">
+          <b>Try typing:</b><br>
+          • <i>"make it yellow with black rims"</i><br>
+          • <i>"add a huge GT wing and widebody"</i><br>
+          • <i>"slam suspension with drift camber"</i><br>
+          • <i>"start 4D wind tunnel test"</i>
+        </div>
+      </div>
 
-async function testAndSaveGeminiKey() {
-  const inp = document.getElementById("geminiApiKeyInput");
-  const fb = document.getElementById("geminiKeyFeedback");
-  const key = inp ? inp.value.trim() : "";
-  if (!key) {
-    clearGeminiKey();
-    return;
-  }
-  if (!fb) return;
-  fb.style.display = "block";
-  fb.style.background = "#1e293b";
-  fb.style.color = "#93c5fd";
-  fb.style.border = "1px solid #3b82f6";
-  fb.innerHTML = `Testing connection with Gemini 2.0 / 2.5 Flash endpoints...`;
+      <div class="flex gap-1.5">
+        <input id="inp-ai" onkeydown="if(event.key==='Enter') askGemini()" placeholder="Command Gemini: 'make it red', 'huge spoiler'..." class="flex-1 px-3 py-2 rounded-xl border text-xs bg-white/95 shadow-inner" />
+        <button onclick="askGemini()" class="px-3 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition shadow">Send</button>
+      </div>
+    </aside>
+  </div>
 
-  let connectedModel = null;
-  for (const item of GEMINI_MODELS) {
-    try {
-      const url = `https://generativelanguage.googleapis.com/${item.ver}/models/${item.model}:generateContent?key=${key}`;
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: "Hello automotive AI" }] }]
-        })
-      });
-      if (res.ok) {
-        connectedModel = item.model;
-        break;
+  <!-- API KEY MODAL -->
+  <div id="modal-key" class="hidden fixed inset-0 bg-black/30 backdrop-blur-sm items-center justify-center z-50">
+    <div class="bg-white rounded-2xl p-5 w-96 shadow-2xl space-y-3 text-xs">
+      <div class="flex items-center justify-between border-b pb-2">
+        <h2 class="font-black text-sm">Gemini AI Engine & API Key</h2>
+        <button onclick="toggleModal('modal-key', false)" class="px-2 py-1 rounded-lg border hover:bg-slate-50">Close</button>
+      </div>
+
+      <!-- Quick Default Gemini Option -->
+      <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="font-bold text-emerald-800 text-xs">✨ Built-in Gemini Smart Engine</span>
+          <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-200 text-emerald-800 font-bold">Default Active</span>
+        </div>
+        <p class="text-[11px] text-emerald-900 leading-relaxed">
+          Trained on iconic automotive dynamics: produces Porsche GT3 specs, aerodynamic downforce analysis, stance tuning, and sports car names with zero latency and no key required.
+        </p>
+        <button type="button" onclick="useDefaultGemini()" class="w-full py-2 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm">
+          <span>⚡</span> Activate Default Gemini Engine (Free & Instant)
+        </button>
+      </div>
+
+      <div class="border-t pt-2 space-y-1.5">
+        <label class="font-bold block text-slate-700">Custom Google AI Studio Key (Optional):</label>
+        <p class="opacity-70 leading-relaxed text-[11px]">To connect to your personal live Google Cloud models, paste your key from <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-blue-600 underline font-bold">Google AI Studio</a>:</p>
+        <input type="password" id="inp-apikey" placeholder="Leave blank for Default Gemini, or paste AIzaSy..." class="w-full px-3 py-2 rounded-xl border font-mono text-xs" />
+      </div>
+
+      <div id="key-test-status" class="hidden p-2.5 rounded-xl text-xs font-semibold"></div>
+
+      <div class="flex items-center justify-between pt-1">
+        <button type="button" onclick="testApiKey()" id="btn-test-key" class="px-3 py-1.5 rounded-lg border font-bold hover:bg-slate-50 flex items-center gap-1">
+          <span>🧪</span> Test
+        </button>
+        <div class="flex gap-2">
+          <button type="button" onclick="clearApiKey()" class="px-3 py-1.5 rounded-lg border text-rose-600 hover:bg-rose-50 font-semibold">Reset</button>
+          <button type="button" onclick="saveApiKey()" class="px-4 py-1.5 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-700">Save Key</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DESIGNER SIGN-IN / REGISTER MODAL -->
+  <div id="modal-auth" class="hidden fixed inset-0 bg-black/30 backdrop-blur-sm items-center justify-center z-50">
+    <div class="bg-white rounded-2xl p-6 w-96 shadow-2xl space-y-3 text-xs">
+      <div class="flex items-center justify-between border-b pb-2">
+        <h2 id="auth-title" class="font-black text-sm">DESIGNER PORTAL</h2>
+        <button type="button" onclick="toggleModal('modal-auth', false)" class="px-2 py-1 border rounded-lg hover:bg-slate-50">Close</button>
+      </div>
+
+      <!-- Sign In vs Create Account Tabs -->
+      <div class="grid grid-cols-2 gap-1 bg-black/5 p-1 rounded-xl text-xs font-bold">
+        <button type="button" onclick="setAuthTab('signin')" id="tab-auth-signin" class="py-2 rounded-lg bg-blue-600 text-white shadow-sm">Sign In</button>
+        <button type="button" onclick="setAuthTab('signup')" id="tab-auth-signup" class="py-2 rounded-lg opacity-70 hover:opacity-100">Create Account</button>
+      </div>
+
+      <p class="opacity-70 leading-relaxed">Sign in or register to save your custom 3D builds, aero packages, and liveries to your Designer Garage.</p>
+
+      <form onsubmit="handleAuth(event)" class="space-y-3">
+        <div id="signup-fields" class="hidden space-y-2">
+          <input id="auth-name" placeholder="Designer Name (e.g. Jayesh Malav)" class="w-full px-3 py-2 rounded-xl border" />
+          <input id="auth-tag" placeholder="Studio Handle (e.g. @jayesh_aero)" class="w-full px-3 py-2 rounded-xl border" />
+        </div>
+        <input required type="email" id="auth-email" placeholder="Designer Email (e.g. jayesh@modling.com)" class="w-full px-3 py-2 rounded-xl border" />
+        <input required type="password" id="auth-pass" placeholder="Password" class="w-full px-3 py-2 rounded-xl border" />
+        <p id="auth-err" class="text-rose-600 font-semibold hidden"></p>
+        <p id="auth-success" class="text-emerald-600 font-semibold hidden"></p>
+        <button type="submit" id="auth-submit-btn" class="w-full py-2.5 rounded-xl font-black bg-blue-600 text-white hover:bg-blue-700 shadow-sm transition">Sign In & Unlock Garage</button>
+      </form>
+
+      <!-- Instant 1-Click Demo Login & Guest Access -->
+      <div class="pt-2 border-t space-y-2">
+        <div class="flex items-center justify-between text-[11px] text-slate-500 font-semibold">
+          <span>Quick Studio Access:</span>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <button type="button" onclick="quickDemoLogin()" class="py-1.5 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 font-bold hover:bg-blue-100 transition flex items-center justify-center gap-1">
+            <span>⚡</span> Jayesh Malav
+          </button>
+          <button type="button" onclick="continueAsGuest()" class="py-1.5 rounded-xl border bg-slate-50 hover:bg-slate-100 font-bold text-slate-700 transition">
+            Continue as Guest
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MY GARAGE MODAL -->
+  <div id="modal-garage" class="hidden fixed inset-0 bg-black/30 backdrop-blur-sm items-center justify-center z-50">
+    <div class="bg-white rounded-2xl p-5 w-[500px] max-h-[80vh] overflow-y-auto shadow-2xl space-y-3 text-xs">
+      <div class="flex justify-between items-center">
+        <h2 id="garage-title" class="font-black text-sm">MY GARAGE</h2>
+        <button onclick="toggleModal('modal-garage', false)" class="px-2.5 py-1 border rounded-lg">Close</button>
+      </div>
+      <div id="garage-list" class="grid grid-cols-2 gap-3"></div>
+    </div>
+  </div>
+
+  <script>
+    // ========================================================================
+    // 1. STATE & BRIGHT THEMES
+    // ========================================================================
+    const DEFAULT_CONFIG = {
+      bodyStyle: 'coupe',
+      modelName: 'Aero GT-01',
+      bodyColor: '#2563eb',
+      accentColor: '#ffffff',
+      finish: 'gloss',
+      livery: 'dual',
+      spoiler: 'gt',
+      wingHeight: 0.5,
+      splitter: 0.5,
+      widebody: 0.4,
+      rideHeight: 0,
+      wheelSize: 20,
+      camber: -2,
+      rimColor: '#e2e8f0',
+      caliperColor: '#ef4444',
+      roofBox: false,
+      canards: true,
+      seatColor: 'tan',
+      ambientColor: '#38bdf8',
+      rollCage: false,
+      exhaustProfile: 'v10',
+      inspectMode: 'render',
+    };
+
+    let config = { ...DEFAULT_CONFIG };
+    let viewMode = 'exterior';
+    let test4D = false;
+    let speed = 140;
+    let rpm = 1200;
+    let revving = false;
+    let muted = false;
+    let authMode = 'signin';
+    let pendingAiUpdates = null;
+
+    const THEMES = {
+      daylight: { body: 'bg-slate-50', canvas: 0xf1f5f9, btn: 'bg-blue-600 text-white' },
+      coastal:  { body: 'bg-amber-50', canvas: 0xfef3c7, btn: 'bg-orange-500 text-white' },
+      pastel:   { body: 'bg-teal-50',  canvas: 0xe0f2fe, btn: 'bg-cyan-600 text-white' },
+    };
+
+    const readStore = (k, fb) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : fb; } catch { return fb; } };
+    let designer = readStore('tcm_current_designer', null);
+    let apiKey = localStorage.getItem('tcm_gemini_key') || '';
+
+    // ========================================================================
+    // 2. WEB AUDIO EXHAUST SYNTHESIZER
+    // ========================================================================
+    let audioCtx, osc1, osc2, subOsc, filterNode, gainNode;
+    function updateExhaustSound() {
+      if ((!revving && !test4D) || muted) {
+        if (gainNode && audioCtx) gainNode.gain.setTargetAtTime(0.0001, audioCtx.currentTime, 0.08);
+        return;
       }
-    } catch (e) {}
-  }
+      if (!audioCtx) {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return;
+        audioCtx = new AC();
+        osc1 = audioCtx.createOscillator();
+        osc2 = audioCtx.createOscillator();
+        subOsc = audioCtx.createOscillator();
+        filterNode = audioCtx.createBiquadFilter();
+        filterNode.type = 'lowpass';
+        gainNode = audioCtx.createGain();
+        gainNode.gain.value = 0.0001;
+        osc1.connect(filterNode); osc2.connect(filterNode); subOsc.connect(filterNode);
+        filterNode.connect(gainNode); gainNode.connect(audioCtx.destination);
+        osc1.start(); osc2.start(); subOsc.start();
+      }
+      if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+      const now = audioCtx.currentTime;
+      const norm = Math.max(0, Math.min(1, (rpm - 1000) / 8000));
+      const p = config.exhaustProfile;
 
-  if (connectedModel) {
-    userGeminiApiKey = key;
-    localStorage.setItem("carGuyGeminiKey", key);
-    fb.style.background = "#064e3b";
-    fb.style.color = "#6ee7b7";
-    fb.style.border = "1px solid #10b981";
-    fb.innerHTML = `✅ Successfully connected to <b>${connectedModel}</b>! Live AI styling is active.`;
-    updateGeminiStatusBadge(true, connectedModel);
-  } else {
-    fb.style.background = "#451a03";
-    fb.style.color = "#fcd34d";
-    fb.style.border = "1px solid #f59e0b";
-    fb.innerHTML = `⚠️ Notice: Key not responding or restricted. The <b>Default Gemini Smart Engine</b> remains 100% active with instant 3D tuning!`;
-    updateGeminiStatusBadge(false);
-  }
-}
+      if (p === 'v8') {
+        osc1.type = 'sawtooth'; osc2.type = 'triangle'; subOsc.type = 'sine';
+        const b = 32 + norm * 145;
+        osc1.frequency.setTargetAtTime(b, now, 0.04);
+        osc2.frequency.setTargetAtTime(b * 1.5, now, 0.04);
+        subOsc.frequency.setTargetAtTime(b * 0.5, now, 0.04);
+        filterNode.frequency.setTargetAtTime(160 + norm * 850, now, 0.05);
+      } else if (p === 'v10') {
+        osc1.type = 'sawtooth'; osc2.type = 'sawtooth'; subOsc.type = 'triangle';
+        const b = 55 + norm * 290;
+        osc1.frequency.setTargetAtTime(b, now, 0.03);
+        osc2.frequency.setTargetAtTime(b * 2.02, now, 0.03);
+        subOsc.frequency.setTargetAtTime(b * 1.25, now, 0.03);
+        filterNode.frequency.setTargetAtTime(280 + norm * 1600, now, 0.04);
+      } else if (p === 'turbo') {
+        osc1.type = 'sawtooth'; osc2.type = 'sine'; subOsc.type = 'triangle';
+        const b = 42 + norm * 195;
+        osc1.frequency.setTargetAtTime(b, now, 0.04);
+        osc2.frequency.setTargetAtTime(900 + norm * 3200, now, 0.06);
+        subOsc.frequency.setTargetAtTime(b * 0.5, now, 0.04);
+        filterNode.frequency.setTargetAtTime(220 + norm * 1200, now, 0.05);
+      } else {
+        osc1.type = 'sine'; osc2.type = 'triangle'; subOsc.type = 'sine';
+        const b = 140 + norm * 620;
+        osc1.frequency.setTargetAtTime(b, now, 0.04);
+        osc2.frequency.setTargetAtTime(b * 1.5, now, 0.04);
+        subOsc.frequency.setTargetAtTime(b * 2, now, 0.04);
+        filterNode.frequency.setTargetAtTime(400 + norm * 2000, now, 0.05);
+      }
+      gainNode.gain.setTargetAtTime(0.06 + norm * 0.12, now, 0.05);
+    }
 
-function clearGeminiKey() {
-  userGeminiApiKey = "";
-  localStorage.removeItem("carGuyGeminiKey");
-  const inp = document.getElementById("geminiApiKeyInput");
-  if (inp) inp.value = "";
-  const fb = document.getElementById("geminiKeyFeedback");
-  if (fb) {
-    fb.style.display = "block";
-    fb.style.background = "#064e3b";
-    fb.style.color = "#6ee7b7";
-    fb.style.border = "1px solid #10b981";
-    fb.innerHTML = `Switched back to <b>Default Gemini Smart Engine</b> (Free, Instant, 100% reliable).`;
-  }
-  updateGeminiStatusBadge(false);
-}
+    // ========================================================================
+    // 3. THREE.JS 3D SCENE, CAR BUILDER & 4D STREAMLINES
+    // ========================================================================
+    const viewport = document.getElementById('viewport');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xf1f5f9);
 
-function openAiModal() {
-  document.getElementById("modalAi").classList.add("active");
-  initGeminiKeyUI();
-}
+    function getVpSize() {
+      const w = viewport.clientWidth > 50 ? viewport.clientWidth : Math.max(400, window.innerWidth - 660);
+      const h = viewport.clientHeight > 50 ? viewport.clientHeight : Math.max(300, window.innerHeight - 60);
+      return { w, h };
+    }
+    const { w: wInit, h: hInit } = getVpSize();
+    const camera = new THREE.PerspectiveCamera(42, wInit / hInit, 0.1, 100);
+    camera.position.set(3.8, 1.85, 4.2);
 
-function closeAiModal() {
-  document.getElementById("modalAi").classList.remove("active");
-}
+    const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+    renderer.setSize(wInit, hInit);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.shadowMap.enabled = true;
+    viewport.appendChild(renderer.domElement);
 
-function askGeminiPrompt(promptText) {
-  document.getElementById("inpAiPrompt").value = promptText;
-  executeAiPrompt();
-}
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.target.set(0, 0.65, 0);
+    controls.maxPolarAngle = Math.PI / 2 - 0.03;
+    controls.enableDamping = true;
 
-async function callLiveGeminiApi(apiKey, promptText) {
-  for (const item of GEMINI_MODELS) {
-    try {
-      const url = `https://generativelanguage.googleapis.com/${item.ver}/models/${item.model}:generateContent?key=${apiKey}`;
-      const payload = {
-        contents: [{
-          parts: [{
-            text: `You are an automotive design engineer in a 3D car studio.
-Current car: ${currentConfig.name}
-Available cars: thar, scorpio, harrier, nexon, xuv700, gtr, bmw_m4, gt3rs, aventador, supra.
-Instruction: "${promptText}".
-Output ONLY a JSON block with:
-{
-  "carKey": "thar"|"scorpio"|"harrier"|"nexon"|"xuv700"|"gtr"|"bmw_m4"|"gt3rs"|"aventador"|"supra"|null,
-  "bodyColor": "#hex"|null,
-  "rimColor": "#hex"|null,
-  "finish": "gloss"|"matte"|"metallic"|null,
-  "rideHeight": number between -30 and 30 or null,
-  "camber": number between -10 and 2 or null,
-  "hasSpoiler": boolean|null,
-  "hasRoofBox": boolean|null,
-  "hasCanards": boolean|null,
-  "widebody": number between 0 and 1 or null,
-  "commentary": "brief explanation"
-}`
-          }]
-        }]
+    scene.add(new THREE.AmbientLight(0xffffff, 0.95));
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1.4);
+    dirLight.position.set(6, 10, 5);
+    dirLight.castShadow = true;
+    scene.add(dirLight);
+
+    const grid = new THREE.GridHelper(24, 24, 0x94a3b8, 0xcbd5e1);
+    scene.add(grid);
+
+    const carGroup = new THREE.Group();
+    carGroup.name = 'THE_CAR_MODLING_BUILD';
+    scene.add(carGroup);
+
+    let wheelMeshes = [];
+    let streamlines = [];
+    let exhaustGroup = null;
+
+    function makePlateTexture(text) {
+      const c = document.createElement('canvas');
+      c.width = 512; c.height = 128;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, 512, 128);
+      ctx.strokeStyle = '#2563eb'; ctx.lineWidth = 10; ctx.strokeRect(6, 6, 500, 116);
+      ctx.fillStyle = '#2563eb'; ctx.fillRect(6, 6, 48, 116);
+      ctx.fillStyle = '#0f172a'; ctx.font = '900 44px sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText((text || 'AERO GT-01').toUpperCase().slice(0, 16), 278, 66);
+      const tex = new THREE.CanvasTexture(c);
+      tex.needsUpdate = true;
+      return tex;
+    }
+
+    function rebuildCar() {
+      while (carGroup.children.length) carGroup.remove(carGroup.children[0]);
+      wheelMeshes = [];
+      streamlines = [];
+
+      const isClay = config.inspectMode === 'clay';
+      const isWire = config.inspectMode === 'wireframe';
+
+      const bodyMat = isClay
+        ? new THREE.MeshStandardMaterial({ color: 0xd6a28c, roughness: 0.85, wireframe: isWire })
+        : new THREE.MeshPhysicalMaterial({
+            color: config.bodyColor,
+            roughness: config.finish === 'matte' ? 0.65 : 0.14,
+            metalness: config.finish === 'metallic' ? 0.85 : 0.35,
+            clearcoat: config.finish === 'matte' ? 0.1 : 1,
+            wireframe: isWire,
+          });
+
+      const seatPalette = { tan: 0xc27d48, ivory: 0xf4f1ea, crimson: 0xb91c1c, slate: 0x334155 };
+      const rideY = 0.42 + config.rideHeight * 0.002;
+      const bodyHolder = new THREE.Group();
+      bodyHolder.position.y = rideY;
+      carGroup.add(bodyHolder);
+
+      const style = config.bodyStyle || 'coupe';
+
+      if (style === 'f1') {
+        // ==========================================
+        // 1. FORMULA 1 OPEN-WHEEL MONOCOQUE
+        // ==========================================
+        const mono = new THREE.Mesh(new THREE.BoxGeometry(0.84, 0.46, 3.1), bodyMat);
+        mono.position.set(0, 0.32, -0.15); mono.castShadow = true;
+        bodyHolder.add(mono);
+
+        const nose = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.24, 1.75), bodyMat);
+        nose.position.set(0, 0.24, 1.6); nose.rotation.x = 0.08; nose.castShadow = true;
+        bodyHolder.add(nose);
+
+        const f1FrontWing = new THREE.Mesh(new THREE.BoxGeometry(2.35, 0.045, 0.52), new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.8 }));
+        f1FrontWing.position.set(0, 0.11, 2.42);
+        bodyHolder.add(f1FrontWing);
+        [-1.16, 1.16].forEach(x => {
+          const ep = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.32, 0.54), new THREE.MeshStandardMaterial({ color: config.bodyColor }));
+          ep.position.set(x, 0.22, 2.42); bodyHolder.add(ep);
+        });
+
+        [-0.68, 0.68].forEach(x => {
+          const pod = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.42, 1.55), bodyMat);
+          pod.position.set(x, 0.29, -0.2); pod.castShadow = true;
+          const inlet = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.34, 0.06), new THREE.MeshStandardMaterial({ color: 0x090d16 }));
+          inlet.position.set(x, 0.29, 0.58);
+          bodyHolder.add(pod, inlet);
+        });
+
+        const haloRing = new THREE.Mesh(new THREE.TorusGeometry(0.32, 0.038, 8, 16, Math.PI), new THREE.MeshStandardMaterial({ color: 0x090d16, metalness: 0.9 }));
+        haloRing.position.set(0, 0.68, 0.22); haloRing.rotation.x = -Math.PI / 2;
+        const haloPillar = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.32, 8), new THREE.MeshStandardMaterial({ color: 0x090d16 }));
+        haloPillar.position.set(0, 0.54, 0.52);
+        bodyHolder.add(haloRing, haloPillar);
+
+        const helmet = new THREE.Mesh(new THREE.SphereGeometry(0.16, 16, 16), new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.3 }));
+        helmet.position.set(0, 0.58, 0.05);
+        const visor = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.07, 0.12), new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.1 }));
+        visor.position.set(0, 0.58, 0.16);
+        bodyHolder.add(helmet, visor);
+
+        const airbox = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.32, 0.65), bodyMat);
+        airbox.position.set(0, 0.88, -0.45);
+        const sharkFin = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.48, 1.35), new THREE.MeshStandardMaterial({ color: 0x090d16 }));
+        sharkFin.position.set(0, 0.82, -1.08);
+        bodyHolder.add(airbox, sharkFin);
+
+        const rwHolder = new THREE.Group();
+        rwHolder.position.set(0, 0.88, -2.15);
+        const bladeTop = new THREE.Mesh(new THREE.BoxGeometry(1.68, 0.04, 0.36), new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.8 }));
+        const bladeBot = new THREE.Mesh(new THREE.BoxGeometry(1.68, 0.04, 0.32), new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.8 }));
+        bladeBot.position.y = -0.2;
+        rwHolder.add(bladeTop, bladeBot);
+        [-0.82, 0.82].forEach(x => {
+          const ep = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.62, 0.54), new THREE.MeshStandardMaterial({ color: config.bodyColor }));
+          ep.position.set(x, -0.06, 0); rwHolder.add(ep);
+        });
+        bodyHolder.add(rwHolder);
+
+        const suspMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.8 });
+        [[-0.55, 1.38], [0.55, 1.38], [-0.55, -1.38], [0.55, -1.38]].forEach(([x, z]) => {
+          const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.65, 8), suspMat);
+          arm.position.set(x * 0.72, 0.32, z);
+          arm.rotation.z = Math.PI / 2;
+          bodyHolder.add(arm);
+        });
+
+      } else if (style === 'hypercar') {
+        // ==========================================
+        // 2. MID-ENGINE HYPERCAR WEDGE
+        // ==========================================
+        const wedgeBody = new THREE.Mesh(new THREE.BoxGeometry(1.98 + config.widebody * 0.16, 0.42, 4.4), bodyMat);
+        wedgeBody.position.set(0, 0.28, 0); wedgeBody.castShadow = true;
+        const lowHood = new THREE.Mesh(new THREE.BoxGeometry(1.86, 0.24, 1.6), bodyMat);
+        lowHood.position.set(0, 0.38, 1.4); lowHood.rotation.x = 0.22; lowHood.castShadow = true;
+        bodyHolder.add(wedgeBody, lowHood);
+
+        const glass = new THREE.Mesh(
+          new THREE.BoxGeometry(1.48, 0.48, 1.95),
+          new THREE.MeshPhysicalMaterial({ color: 0xe0f2fe, transparent: true, opacity: 0.32, roughness: 0.05 })
+        );
+        glass.position.set(0, 0.74, -0.12);
+        const roof = new THREE.Mesh(new THREE.BoxGeometry(1.38, 0.05, 1.4), bodyMat);
+        roof.position.set(0, 0.98, -0.18);
+        const roofScoop = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.15, 0.6), new THREE.MeshStandardMaterial({ color: 0x090d16 }));
+        roofScoop.position.set(0, 1.08, -0.22);
+        bodyHolder.add(glass, roof, roofScoop);
+
+        [-0.96, 0.96].forEach(x => {
+          const scoop = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.36, 0.9), new THREE.MeshStandardMaterial({ color: 0x0f172a }));
+          scoop.position.set(x, 0.36, -0.35); bodyHolder.add(scoop);
+        });
+
+        const diffuser = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.12, 0.48), new THREE.MeshStandardMaterial({ color: 0x090d16 }));
+        diffuser.position.set(0, 0.12, -2.18);
+        bodyHolder.add(diffuser);
+
+      } else if (style === 'suv') {
+        // ==========================================
+        // 3. SAFARI SPORT SUV 4X4
+        // ==========================================
+        const suvBody = new THREE.Mesh(new THREE.BoxGeometry(2.02, 0.68, 4.35), bodyMat);
+        suvBody.position.set(0, 0.44, 0); suvBody.castShadow = true;
+        const suvHood = new THREE.Mesh(new THREE.BoxGeometry(1.92, 0.32, 1.45), bodyMat);
+        suvHood.position.set(0, 0.62, 1.42); suvHood.rotation.x = 0.06;
+        bodyHolder.add(suvBody, suvHood);
+
+        const suvGlass = new THREE.Mesh(
+          new THREE.BoxGeometry(1.82, 0.62, 2.55),
+          new THREE.MeshPhysicalMaterial({ color: 0xe0f2fe, transparent: true, opacity: 0.32, roughness: 0.05 })
+        );
+        suvGlass.position.set(0, 1.02, -0.32);
+        const suvRoof = new THREE.Mesh(new THREE.BoxGeometry(1.82, 0.06, 2.45), bodyMat);
+        suvRoof.position.set(0, 1.34, -0.32);
+        bodyHolder.add(suvGlass, suvRoof);
+
+        const rack = new THREE.Mesh(new THREE.BoxGeometry(1.68, 0.08, 1.95), new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.8 }));
+        rack.position.set(0, 1.42, -0.32);
+        bodyHolder.add(rack);
+        [-0.6, -0.2, 0.2, 0.6].forEach(x => {
+          const pod = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.1, 0.12), new THREE.MeshBasicMaterial({ color: 0xfef08a }));
+          pod.position.set(x, 1.48, 0.68); bodyHolder.add(pod);
+        });
+
+        const spareTire = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.36, 0.22, 24), new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.8 }));
+        spareTire.rotation.x = Math.PI / 2;
+        spareTire.position.set(0, 0.72, -2.28);
+        const spareRim = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.24, 0.23, 16), new THREE.MeshStandardMaterial({ color: config.rimColor, metalness: 0.8 }));
+        spareRim.rotation.x = Math.PI / 2;
+        spareRim.position.set(0, 0.72, -2.28);
+        bodyHolder.add(spareTire, spareRim);
+
+      } else if (style === 'muscle') {
+        // ==========================================
+        // 4. AMERICAN V8 MUSCLE
+        // ==========================================
+        const muscleBody = new THREE.Mesh(new THREE.BoxGeometry(1.96 + config.widebody * 0.14, 0.52, 4.4), bodyMat);
+        muscleBody.position.set(0, 0.34, 0); muscleBody.castShadow = true;
+        const longHood = new THREE.Mesh(new THREE.BoxGeometry(1.88, 0.30, 1.7), bodyMat);
+        longHood.position.set(0, 0.48, 1.32); longHood.rotation.x = 0.05;
+        bodyHolder.add(muscleBody, longHood);
+
+        const shaker = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.18, 0.65), new THREE.MeshStandardMaterial({ color: 0x090d16, roughness: 0.4 }));
+        shaker.position.set(0, 0.68, 1.25);
+        bodyHolder.add(shaker);
+
+        const glass = new THREE.Mesh(
+          new THREE.BoxGeometry(1.62, 0.54, 1.95),
+          new THREE.MeshPhysicalMaterial({ color: 0xe0f2fe, transparent: true, opacity: 0.32, roughness: 0.05 })
+        );
+        glass.position.set(0, 0.84, -0.22);
+        const roof = new THREE.Mesh(new THREE.BoxGeometry(1.52, 0.06, 1.4), bodyMat);
+        roof.position.set(0, 1.12, -0.25);
+        bodyHolder.add(glass, roof);
+
+        const ducktail = new THREE.Mesh(new THREE.BoxGeometry(1.85, 0.15, 0.18), bodyMat);
+        ducktail.position.set(0, 0.68, -2.15); ducktail.rotation.x = -0.35;
+        bodyHolder.add(ducktail);
+
+      } else if (style === 'speedster') {
+        // ==========================================
+        // 5. OPEN-TOP SPEEDSTER SPYDER
+        // ==========================================
+        const spyderBody = new THREE.Mesh(new THREE.BoxGeometry(1.92 + config.widebody * 0.16, 0.46, 4.35), bodyMat);
+        spyderBody.position.set(0, 0.30, 0); spyderBody.castShadow = true;
+        const hood = new THREE.Mesh(new THREE.BoxGeometry(1.84, 0.26, 1.55), bodyMat);
+        hood.position.set(0, 0.44, 1.35); hood.rotation.x = 0.15;
+        bodyHolder.add(spyderBody, hood);
+
+        const aeroScreen = new THREE.Mesh(
+          new THREE.BoxGeometry(1.52, 0.28, 0.4),
+          new THREE.MeshPhysicalMaterial({ color: 0xe0f2fe, transparent: true, opacity: 0.32, roughness: 0.05 })
+        );
+        aeroScreen.position.set(0, 0.68, 0.48); aeroScreen.rotation.x = 0.45;
+        bodyHolder.add(aeroScreen);
+
+        [-0.38, 0.38].forEach(x => {
+          const cowl = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.32, 1.15), bodyMat);
+          cowl.position.set(x, 0.64, -0.68); cowl.rotation.x = -0.18; cowl.castShadow = true;
+          bodyHolder.add(cowl);
+        });
+
+      } else {
+        // ==========================================
+        // 6. GT SUPERCAR COUPE (Default)
+        // ==========================================
+        const mainBody = new THREE.Mesh(new THREE.BoxGeometry(1.92 + config.widebody * 0.16, 0.48, 4.35), bodyMat);
+        mainBody.position.set(0, 0.32, 0); mainBody.castShadow = true;
+        bodyHolder.add(mainBody);
+
+        const hood = new THREE.Mesh(new THREE.BoxGeometry(1.84, 0.28, 1.55), bodyMat);
+        hood.position.set(0, 0.46, 1.35); hood.rotation.x = 0.14; hood.castShadow = true;
+        bodyHolder.add(hood);
+
+        const glass = new THREE.Mesh(
+          new THREE.BoxGeometry(1.56, 0.56, 2.05),
+          new THREE.MeshPhysicalMaterial({ color: 0xe0f2fe, transparent: true, opacity: 0.32, roughness: 0.05 })
+        );
+        glass.position.set(0, 0.84, -0.15);
+        bodyHolder.add(glass);
+
+        const roof = new THREE.Mesh(new THREE.BoxGeometry(1.48, 0.06, 1.45), bodyMat);
+        roof.position.set(0, 1.13, -0.22);
+        bodyHolder.add(roof);
+      }
+
+      // 3D Interior Cockpit
+      const cabin = new THREE.Group();
+      cabin.position.set(0, 0.56, -0.15);
+      const floor = new THREE.Mesh(new THREE.BoxGeometry(1.46, 0.04, 1.85), new THREE.MeshStandardMaterial({ color: 0xcbd5e1 }));
+      cabin.add(floor);
+
+      const seatMat = new THREE.MeshStandardMaterial({ color: seatPalette[config.seatColor] || 0xc27d48, roughness: 0.5 });
+      [-0.38, 0.38].forEach(x => {
+        const base = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.14, 0.48), seatMat);
+        base.position.set(x, 0.22, -0.18);
+        const back = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.52, 0.12), seatMat);
+        back.position.set(x, 0.5, -0.36); back.rotation.x = -0.18;
+        cabin.add(base, back);
+      });
+
+      const dash = new THREE.Mesh(new THREE.BoxGeometry(1.46, 0.24, 0.38), new THREE.MeshStandardMaterial({ color: 0x334155 }));
+      dash.position.set(0, 0.34, 0.72);
+      const ledStrip = new THREE.Mesh(new THREE.BoxGeometry(1.42, 0.025, 0.03), new THREE.MeshBasicMaterial({ color: config.ambientColor }));
+      ledStrip.position.set(0, 0.43, 0.54);
+      const wheel = new THREE.Mesh(new THREE.TorusGeometry(0.15, 0.022, 12, 24), new THREE.MeshStandardMaterial({ color: 0x1e293b }));
+      wheel.position.set(-0.38, 0.44, 0.46); wheel.rotation.x = -0.35;
+      cabin.add(dash, ledStrip, wheel);
+
+      if (config.rollCage) {
+        const cage = new THREE.Mesh(new THREE.TorusGeometry(0.58, 0.025, 8, 20, Math.PI), new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.9 }));
+        cage.position.set(0, 0.32, -0.62);
+        cabin.add(cage);
+      }
+      bodyHolder.add(cabin);
+
+      // Front Splitter, Canards & Headlights
+      const splitter = new THREE.Mesh(new THREE.BoxGeometry(1.98, 0.05, 0.38), new THREE.MeshStandardMaterial({ color: 0x1e293b }));
+      splitter.position.set(0, 0.11, 2.22 + config.splitter * 0.08);
+      bodyHolder.add(splitter);
+
+      if (config.canards) {
+        [-0.98, 0.98].forEach((x, i) => {
+          const canard = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.02, 0.28), new THREE.MeshStandardMaterial({ color: 0x0f172a }));
+          canard.position.set(x, 0.22, 1.98); canard.rotation.z = i === 0 ? 0.25 : -0.25;
+          bodyHolder.add(canard);
+        });
+      }
+
+      [-0.68, 0.68].forEach(x => {
+        const drl = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.07, 0.05), new THREE.MeshBasicMaterial({ color: 0xe0f2fe }));
+        drl.position.set(x, 0.42, 2.18);
+        bodyHolder.add(drl);
+      });
+
+      // Active Rear Wing
+      if (config.spoiler !== 'none') {
+        const wingGroup = new THREE.Group();
+        wingGroup.position.set(0, 0.72 + config.wingHeight * 0.12, -1.96);
+        wingGroup.rotation.x = test4D ? (speed / 320) * 0.28 : 0.08;
+        const blade = new THREE.Mesh(new THREE.BoxGeometry(1.88, 0.05, 0.36), new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.6 }));
+        wingGroup.add(blade);
+        [-0.55, 0.55].forEach(x => {
+          const strut = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.26, 0.18), new THREE.MeshStandardMaterial({ color: 0x334155 }));
+          strut.position.set(x, -0.14, 0);
+          wingGroup.add(strut);
+        });
+        bodyHolder.add(wingGroup);
+      }
+
+      // Roof Cargo Box Accessory
+      if (config.roofBox) {
+        const box = new THREE.Mesh(new THREE.BoxGeometry(0.88, 0.22, 1.55), bodyMat);
+        box.position.set(0, 1.27, -0.24);
+        bodyHolder.add(box);
+      }
+
+      // Quad Exhaust Tips
+      exhaustGroup = new THREE.Group();
+      exhaustGroup.position.set(0, 0.16, -2.2);
+      [-0.52, -0.36, 0.36, 0.52].forEach(x => {
+        const tip = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, 0.18, 16), new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.9 }));
+        tip.position.set(x, 0, 0); tip.rotation.x = Math.PI / 2;
+        exhaustGroup.add(tip);
+      });
+      bodyHolder.add(exhaustGroup);
+
+      // 3D Custom License Plate
+      const plate = new THREE.Mesh(
+        new THREE.PlaneGeometry(0.58, 0.14),
+        new THREE.MeshBasicMaterial({ map: makePlateTexture(config.modelName) })
+      );
+      plate.position.set(0, 0.34, -2.19); plate.rotation.y = Math.PI;
+      bodyHolder.add(plate);
+
+      // 4 Wheels + Camber + Brake Calipers
+      const wScale = config.wheelSize / 20;
+      const camberRad = (config.camber * Math.PI) / 180;
+      const positions = [
+        [-0.95 - config.widebody * 0.08, 0.38, 1.38],
+        [0.95 + config.widebody * 0.08, 0.38, 1.38],
+        [-0.95 - config.widebody * 0.08, 0.38, -1.38],
+        [0.95 + config.widebody * 0.08, 0.38, -1.38],
+      ];
+      positions.forEach(pos => {
+        const isLeft = pos[0] < 0;
+        const wHolder = new THREE.Group();
+        wHolder.position.set(...pos);
+        wHolder.scale.set(wScale, wScale, wScale);
+        wHolder.rotation.z = isLeft ? -camberRad : camberRad;
+
+        const spinGroup = new THREE.Group();
+        const tire = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.38, 0.28, 28), new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.75 }));
+        tire.rotation.z = Math.PI / 2;
+        const rim = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.26, 0.29, 20), new THREE.MeshStandardMaterial({ color: config.rimColor, metalness: 0.85, roughness: 0.2 }));
+        rim.rotation.z = Math.PI / 2;
+        spinGroup.add(tire, rim);
+        wHolder.add(spinGroup);
+        wheelMeshes.push(spinGroup);
+
+        const caliper = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.14, 0.12), new THREE.MeshStandardMaterial({ color: config.caliperColor }));
+        caliper.position.set(isLeft ? 0.06 : -0.06, 0.12, 0.1);
+        wHolder.add(caliper);
+        carGroup.add(wHolder);
+      });
+
+      // 4D Wind Tunnel Streamlines
+      if (test4D) {
+        [-0.65, -0.22, 0.22, 0.65].forEach((x, idx) => {
+          const line = new THREE.Mesh(
+            new THREE.BoxGeometry(0.025, 0.025, 1.4),
+            new THREE.MeshBasicMaterial({ color: 0x0284c7, transparent: true, opacity: 0.75 })
+          );
+          line.position.set(x, 0.95 + (idx % 2) * 0.25, 2.5 - idx);
+          carGroup.add(line);
+          streamlines.push(line);
+        });
+      }
+    }
+
+    rebuildCar();
+
+    // Animation Loop
+    const clock = new THREE.Clock();
+    function animate() {
+      requestAnimationFrame(animate);
+      const delta = clock.getDelta();
+
+      const targetRpm = revving ? 8800 : test4D ? 2000 + speed * 21 : 1150;
+      rpm = Math.round(rpm + (targetRpm - rpm) * 0.18);
+      document.getElementById('rpm-readout').textContent = rpm;
+      updateExhaustSound();
+
+      if (exhaustGroup) {
+        exhaustGroup.position.x = rpm > 1500 ? (Math.random() - 0.5) * (((rpm - 1000) / 8000) * 0.012) : 0;
+      }
+
+      if (test4D) {
+        const spin = (speed / 35) * delta * 8;
+        wheelMeshes.forEach(w => { w.rotation.x += spin; });
+        streamlines.forEach((line, idx) => {
+          line.position.z -= delta * (4 + speed * 0.04);
+          if (line.position.z < -3.5) line.position.z = 3.5 + (idx % 3) * 0.4;
+        });
+      }
+
+      controls.update();
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    function resizeViewport() {
+      const w = viewport.clientWidth || 600;
+      const h = viewport.clientHeight || 500;
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h);
+    }
+    window.addEventListener('resize', resizeViewport);
+    setTimeout(resizeViewport, 100);
+
+    // ========================================================================
+    // CINEMATIC INTRO VIDEO CONTROLLER
+    // ========================================================================
+    let introEntered = false;
+
+    function enterStudio() {
+      if (introEntered) return;
+      introEntered = true;
+      const overlay = document.getElementById('intro-overlay');
+      const vid = document.getElementById('intro-video');
+      if (vid) {
+        try { vid.pause(); } catch (e) {}
+      }
+      if (overlay) {
+        overlay.style.opacity = '0';
+        overlay.style.pointerEvents = 'none';
+        setTimeout(() => {
+          overlay.style.display = 'none';
+        }, 700);
+      }
+      // Re-calibrate Three.js viewport and trigger canvas render
+      setTimeout(resizeViewport, 50);
+      setTimeout(resizeViewport, 300);
+      setTimeout(resizeViewport, 750);
+    }
+
+    function toggleIntroAudio() {
+      const vid = document.getElementById('intro-video');
+      const icon = document.getElementById('intro-audio-icon');
+      const txt = document.getElementById('intro-audio-text');
+      if (!vid) return;
+      vid.muted = !vid.muted;
+      if (!vid.muted) {
+        vid.play().catch(() => {});
+        if (icon) icon.textContent = '🔊';
+        if (txt) txt.textContent = 'Mute';
+      } else {
+        if (icon) icon.textContent = '🔇';
+        if (txt) txt.textContent = 'Unmute';
+      }
+    }
+
+    function onIntroVideoError() {
+      console.warn('Intro video note: File loading or codec fallback.');
+    }
+
+    function replayIntro() {
+      introEntered = false;
+      const overlay = document.getElementById('intro-overlay');
+      const vid = document.getElementById('intro-video');
+      if (overlay) {
+        overlay.style.display = 'flex';
+        overlay.style.pointerEvents = 'auto';
+        setTimeout(() => { overlay.style.opacity = '1'; }, 10);
+      }
+      if (vid) {
+        vid.currentTime = 0;
+        vid.play().catch(() => {});
+      }
+    }
+
+    // ========================================================================
+    // 4. INTERACTIVE CONTROLS, GEMINI AI, SIGN-IN & GARAGE SAVE
+    // ========================================================================
+    function updateCfg(patch) {
+      config = { ...config, ...patch };
+      const elName = document.getElementById('inp-model-name');
+      if (elName && config.modelName) elName.value = config.modelName;
+      const elColor = document.getElementById('inp-color');
+      if (elColor && config.bodyColor) elColor.value = config.bodyColor;
+      const elRoof = document.getElementById('chk-roofbox');
+      if (elRoof) elRoof.checked = !!config.roofBox;
+      const elCanards = document.getElementById('chk-canards');
+      if (elCanards) elCanards.checked = !!config.canards;
+      const elCage = document.getElementById('chk-rollcage');
+      if (elCage) elCage.checked = !!config.rollCage;
+      const elRev = document.getElementById('btn-rev');
+      if (elRev && config.exhaustProfile) elRev.textContent = `HOLD TO REV (${config.exhaustProfile.toUpperCase()})`;
+
+      const elWing = document.getElementById('rng-wing-height');
+      if (elWing && config.wingHeight !== undefined) elWing.value = config.wingHeight;
+      const elWide = document.getElementById('rng-widebody');
+      if (elWide && config.widebody !== undefined) elWide.value = config.widebody;
+      const elSplit = document.getElementById('rng-splitter');
+      if (elSplit && config.splitter !== undefined) elSplit.value = config.splitter;
+      const elRide = document.getElementById('rng-ride-height');
+      if (elRide && config.rideHeight !== undefined) elRide.value = config.rideHeight;
+      const elWheel = document.getElementById('rng-wheel-size');
+      if (elWheel && config.wheelSize !== undefined) elWheel.value = config.wheelSize;
+      const elCamber = document.getElementById('rng-camber');
+      if (elCamber && config.camber !== undefined) elCamber.value = config.camber;
+
+      if (patch.bodyStyle) syncModelCards();
+      rebuildCar();
+    }
+
+    function selectCarModel(type) {
+      const modelPresets = {
+        coupe: { modelName: 'Aero GT-01', spoiler: 'gt', wingHeight: 0.5, widebody: 0.4, rideHeight: 0, camber: -2 },
+        f1: { modelName: 'RB20 F1 Aero', finish: 'matte', spoiler: 'gt', wingHeight: 1.0, widebody: 0.8, rideHeight: -35, camber: -5.5, roofBox: false },
+        hypercar: { modelName: 'Torero Hyper-V', finish: 'metallic', spoiler: 'gt', wingHeight: 0.9, widebody: 0.85, rideHeight: -25, camber: -3.5 },
+        suv: { modelName: 'Safari Raid 4x4', spoiler: 'none', wingHeight: 0.1, widebody: 0.6, rideHeight: 20, camber: 0, roofBox: true },
+        muscle: { modelName: 'V8 Interceptor', finish: 'metallic', livery: 'dual', spoiler: 'gt', wingHeight: 0.55, widebody: 0.65, rideHeight: -10, camber: -2 },
+        speedster: { modelName: 'Monza Spyder', finish: 'gloss', spoiler: 'none', wingHeight: 0.2, widebody: 0.5, rideHeight: -15, camber: -2.5, roofBox: false }
       };
 
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+      const preset = modelPresets[type] || {};
+      updateCfg({ bodyStyle: type, ...preset });
+    }
+
+    function syncModelCards() {
+      document.querySelectorAll('.model-card').forEach(c => {
+        c.className = 'model-card p-2.5 rounded-xl border border-slate-200 bg-white/70 text-left transition hover:border-blue-500 shadow-sm';
       });
-
-      if (!res.ok) continue;
-      const data = await res.json();
-      const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
-      const cleaned = rawText.replace(/```json/g, "").replace(/```/g, "").trim();
-      const parsed = JSON.parse(cleaned);
-      return { model: item.model, data: parsed };
-    } catch (e) {
-      // try next model
-    }
-  }
-  throw new Error("Unable to parse live model response");
-}
-
-async function executeAiPrompt() {
-  const inp = document.getElementById("inpAiPrompt");
-  const q = inp.value.trim();
-  if (!q) return;
-  inp.value = "";
-
-  const box = document.getElementById("aiResponseBox");
-  box.innerHTML = `<span style="color:#38bdf8;">⚙️ Sculpting 3D car model based on Gemini automotive command...</span>`;
-
-  // Backup for Undo
-  lastAiBackup = {
-    key: currentKey,
-    config: { ...currentConfig }
-  };
-
-  let appliedViaLive = false;
-  let liveModelUsed = "";
-  let commentary = "";
-
-  if (userGeminiApiKey) {
-    try {
-      const res = await callLiveGeminiApi(userGeminiApiKey, q);
-      const d = res.data;
-      if (d) {
-        if (d.carKey && CAR_DATABASE[d.carKey] && d.carKey !== currentKey) {
-          currentKey = d.carKey;
-          currentConfig = { ...CAR_DATABASE[currentKey] };
-          document.getElementById("carSelect").value = currentKey;
-        }
-        if (d.bodyColor) currentConfig.defaultColor = d.bodyColor;
-        if (d.rimColor) currentConfig.defaultRims = d.rimColor;
-        if (d.finish) currentConfig.finish = d.finish;
-        if (typeof d.rideHeight === "number") currentConfig.rideHeight = d.rideHeight;
-        if (typeof d.camber === "number") currentConfig.camber = d.camber;
-        if (typeof d.hasSpoiler === "boolean") currentConfig.hasSpoiler = d.hasSpoiler;
-        if (typeof d.hasRoofBox === "boolean") currentConfig.hasRoofBox = d.hasRoofBox;
-        if (typeof d.hasCanards === "boolean") currentConfig.hasCanards = d.hasCanards;
-        if (typeof d.widebody === "number") currentConfig.widebody = d.widebody;
-        if (d.commentary) commentary = d.commentary;
-
-        appliedViaLive = true;
-        liveModelUsed = res.model;
+      const activeCard = document.getElementById(`card-model-${config.bodyStyle || 'coupe'}`);
+      if (activeCard) {
+        activeCard.className = 'model-card p-2.5 rounded-xl border-2 border-blue-600 bg-blue-50/70 text-left transition hover:border-blue-500 shadow-sm';
       }
-    } catch (err) {
-      console.warn("Live API fell back to built-in smart engine:", err);
     }
-  }
 
-  if (!appliedViaLive) {
-    applyDefaultGeminiEngine(q);
-  } else {
-    // Update inputs & rebuild 3D model
-    document.getElementById("paint").value = currentConfig.defaultColor;
-    document.getElementById("wheelColor").value = currentConfig.defaultRims;
-    document.getElementById("finish").value = currentConfig.finish;
-    document.getElementById("stanceRange").value = currentConfig.rideHeight;
-    document.getElementById("camberRange").value = currentConfig.camber;
+    function formatChangeSummary(up) {
+      if (!up) return '';
+      const items = [];
+      if (up.bodyStyle) {
+        const styleLabels = { f1: '🏁 Formula 1 Monocoque', hypercar: '⚡ Hypercar Wedge', suv: '🚙 Safari SUV', muscle: '🔥 V8 Muscle', speedster: '✨ Speedster Spyder', coupe: '🏎️ GT Supercar' };
+        items.push(styleLabels[up.bodyStyle] || up.bodyStyle.toUpperCase());
+      }
+      if (up.bodyColor) items.push(`🎨 Body Color`);
+      if (up.finish) items.push(`✨ ${up.finish.toUpperCase()}`);
+      if (up.livery && up.livery !== 'none') items.push(`🏁 ${up.livery.toUpperCase()} Livery`);
+      if (up.spoiler === 'gt') items.push(`🪽 GT Wing`);
+      else if (up.spoiler === 'none') items.push(`🪽 Clean Deck`);
+      if (up.rideHeight !== undefined) items.push(`⚙️ ${up.rideHeight}mm Stance`);
+      if (up.camber !== undefined) items.push(`📐 ${up.camber}° Camber`);
+      if (up.widebody !== undefined && up.widebody > 0.5) items.push(`🏎️ Widebody Kit`);
+      if (up.rimColor) items.push(`🛞 Custom Rims`);
+      if (up.caliperColor) items.push(`🛑 Calipers`);
+      if (up.roofBox) items.push(`📦 Roof Box`);
+      if (up.canards) items.push(`✈️ Dive Canards`);
+      if (up.rollCage) items.push(`🛡️ Roll Cage`);
+      if (up.seatColor) items.push(`💺 ${up.seatColor.toUpperCase()} Seats`);
+      if (up.exhaustProfile) items.push(`🔊 ${up.exhaustProfile.toUpperCase()} Sound`);
+      return items.join(' • ');
+    }
 
-    syncAccessoryButtons();
-    rebuildCurrentCar();
+    function resetCar() { updateCfg(DEFAULT_CONFIG); }
 
-    box.innerHTML = `
-      <div style="font-weight:bold; color:#fff; margin-bottom:4px;">✅ Gemini AI Modification Complete</div>
-      <div>${commentary || `Applied live bespoke automotive tuning for "${currentConfig.name}"!`}</div>
-      <div style="font-size:10px; color:#38bdf8; margin-top:6px; font-weight:bold;">⚡ Live Cloud Engine: ${liveModelUsed} • 3D Sculpted</div>
-    `;
-    document.getElementById("aiUndoContainer").style.display = "block";
-  }
-}
+    function setTheme(key) {
+      const t = THEMES[key];
+      document.getElementById('app-body').className = `${t.body} text-slate-800 select-none transition-colors duration-300`;
+      scene.background = new THREE.Color(t.canvas);
+      document.querySelectorAll('.theme-btn').forEach(b => b.className = 'theme-btn px-3 py-1 rounded-lg text-xs font-bold hover:bg-white/60');
+      document.getElementById(`th-${key}`).className = `theme-btn px-3 py-1 rounded-lg text-xs font-bold ${t.btn}`;
+    }
 
-function applyDefaultGeminiEngine(promptText) {
-  const q = promptText.toLowerCase();
-  const box = document.getElementById("aiResponseBox");
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('hidden'));
+      document.getElementById(`pane-${tab}`).classList.remove('hidden');
+      document.querySelectorAll('.tab-btn').forEach(b => b.className = 'tab-btn py-2 rounded-lg opacity-70');
+      document.getElementById(`tab-${tab}`).className = 'tab-btn py-2 rounded-lg bg-blue-600 text-white';
+      if (tab === 'cabin' && viewMode !== 'interior') toggleViewMode();
+    }
 
-  let matchedCarKey = null;
+    function toggleViewMode() {
+      viewMode = viewMode === 'exterior' ? 'interior' : 'exterior';
+      document.getElementById('btn-view').textContent = viewMode === 'exterior' ? '👁️ Interior Cockpit' : '🚗 Exterior View';
+      if (viewMode === 'interior') {
+        camera.position.set(-0.36, 1.18, 0.05);
+        controls.target.set(-0.36, 1.05, 0.7);
+      } else {
+        camera.position.set(3.8, 1.85, 4.2);
+        controls.target.set(0, 0.65, 0);
+      }
+    }
 
-  // Car model selection
-  if (q.includes("thar") || q.includes("roxx") || q.includes("offroad") || q.includes("4x4")) matchedCarKey = "thar";
-  else if (q.includes("scorpio") || q.includes("big daddy")) matchedCarKey = "scorpio";
-  else if (q.includes("harrier")) matchedCarKey = "harrier";
-  else if (q.includes("nexon")) matchedCarKey = "nexon";
-  else if (q.includes("xuv") || q.includes("700")) matchedCarKey = "xuv700";
-  else if (q.includes("gtr") || q.includes("gt-r") || q.includes("godzilla")) matchedCarKey = "gtr";
-  else if (q.includes("m4") || q.includes("bmw")) matchedCarKey = "bmw_m4";
-  else if (q.includes("gt3") || q.includes("porsche") || q.includes("911")) matchedCarKey = "gt3rs";
-  else if (q.includes("aventador") || q.includes("lambo") || q.includes("lamborghini")) matchedCarKey = "aventador";
-  else if (q.includes("supra")) matchedCarKey = "supra";
+    function toggle4DTest() {
+      test4D = !test4D;
+      const btn = document.getElementById('btn-4d');
+      const spd = document.getElementById('speed-control');
+      btn.className = test4D
+        ? 'px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-500 text-white'
+        : 'px-3 py-1.5 rounded-xl text-xs font-bold border border-blue-200 bg-blue-50 text-blue-700';
+      spd.classList.toggle('hidden', !test4D);
+      spd.classList.toggle('flex', test4D);
+      rebuildCar();
+    }
 
-  if (matchedCarKey && matchedCarKey !== currentKey) {
-    currentKey = matchedCarKey;
-    currentConfig = { ...CAR_DATABASE[matchedCarKey] };
-    document.getElementById("carSelect").value = currentKey;
-  }
+    function setSpeed(v) { speed = v; document.getElementById('speed-readout').textContent = v; rebuildCar(); }
+    function setRevving(v) { revving = v; }
+    function toggleMute() { muted = !muted; document.getElementById('btn-mute').textContent = muted ? '🔇' : '🔊'; }
 
-  // Color recognition
-  if (q.includes("red") || q.includes("crimson") || q.includes("ferrari")) currentConfig.defaultColor = "#dc2626";
-  else if (q.includes("blue") || q.includes("navy") || q.includes("bayside")) currentConfig.defaultColor = "#1d4ed8";
-  else if (q.includes("green") || q.includes("lizard") || q.includes("emerald")) currentConfig.defaultColor = "#16a34a";
-  else if (q.includes("yellow") || q.includes("gold") || q.includes("giallo")) currentConfig.defaultColor = "#eab308";
-  else if (q.includes("black") || q.includes("stealth") || q.includes("dark") || q.includes("batmobile")) currentConfig.defaultColor = "#0d0d0d";
-  else if (q.includes("white") || q.includes("pearl") || q.includes("everest")) currentConfig.defaultColor = "#f8fafc";
-  else if (q.includes("purple") || q.includes("violet")) currentConfig.defaultColor = "#7c3aed";
-  else if (q.includes("orange") || q.includes("sunset")) currentConfig.defaultColor = "#ea580c";
-  else if (q.includes("silver") || q.includes("grey") || q.includes("gray")) currentConfig.defaultColor = "#9ca3af";
+    window.addEventListener('keydown', e => { if (e.code === 'Space' && document.activeElement.tagName !== 'INPUT') { e.preventDefault(); revving = true; } });
+    window.addEventListener('keyup', e => { if (e.code === 'Space') revving = false; });
 
-  // Finish
-  if (q.includes("matte")) currentConfig.finish = "matte";
-  else if (q.includes("gloss")) currentConfig.finish = "gloss";
-  else if (q.includes("metallic")) currentConfig.finish = "metallic";
+    function toggleModal(id, show) {
+      const el = document.getElementById(id);
+      el.classList.toggle('hidden', !show);
+      el.classList.toggle('flex', show);
+    }
 
-  // Wheels
-  if (q.includes("black rim") || q.includes("black wheel") || q.includes("dark rim")) currentConfig.defaultRims = "#0f172a";
-  else if (q.includes("gold rim") || q.includes("bronze rim")) currentConfig.defaultRims = "#d97706";
-  else if (q.includes("silver rim") || q.includes("chrome rim")) currentConfig.defaultRims = "#e2e8f0";
-  else if (q.includes("white rim")) currentConfig.defaultRims = "#ffffff";
+    // Default Built-in Gemini Smart Engine (Always active by default, works with or without personal API key)
+    function smartGeminiEngine(q) {
+      const lower = q.toLowerCase();
+      let reply = '';
+      let updates = {};
+      let action = null;
+      let actionTheme = null;
 
-  // Stance & Aero
-  if (q.includes("slam") || q.includes("lower") || q.includes("drop")) currentConfig.rideHeight = -26;
-  else if (q.includes("lift") || q.includes("raise") || q.includes("high ride")) currentConfig.rideHeight = 22;
+      // 1. Actions & Camera Modes
+      if (lower.includes('4d') || lower.includes('wind test') || lower.includes('wind tunnel') || lower.includes('aero test')) {
+        action = '4d';
+      }
+      if (lower.includes('cockpit') || lower.includes('interior view') || lower.includes('inside car') || lower.includes('driver view')) {
+        action = 'cockpit';
+      } else if (lower.includes('exterior view') || lower.includes('outside car') || lower.includes('third person')) {
+        action = 'exterior';
+      }
+      if (lower.includes('daylight theme') || lower.includes('daylight studio')) actionTheme = 'daylight';
+      else if (lower.includes('coastal theme') || lower.includes('coastal showroom')) actionTheme = 'coastal';
+      else if (lower.includes('pastel theme') || lower.includes('pastel concept')) actionTheme = 'pastel';
 
-  if (q.includes("drift") || q.includes("camber")) currentConfig.camber = -5.5;
+      // 2. Iconic Automotive Archetypes
+      if (lower.includes('red bull') || lower.includes('f1') || lower.includes('formula 1') || lower.includes('formula one') || lower.includes('open wheel')) {
+        reply = "Executing Red Bull Racing F1 Aerodynamic package: Formula 1 open-wheel monocoque, matte navy blue chassis, yellow/red livery, bi-plane rear wing, front F1 wing, halo bar, dive canards, and screaming V10 powertrain acoustics.";
+        updates = {
+          bodyStyle: 'f1',
+          modelName: 'RB20 F1 Aero',
+          bodyColor: '#0b132b',
+          accentColor: '#facc15',
+          finish: 'matte',
+          livery: 'dual',
+          spoiler: 'gt',
+          wingHeight: 1.0,
+          splitter: 0.9,
+          widebody: 0.85,
+          rideHeight: -35,
+          camber: -5.5,
+          wheelSize: 20,
+          rimColor: '#1e293b',
+          caliperColor: '#ef4444',
+          roofBox: false,
+          canards: true,
+          rollCage: true,
+          seatColor: 'slate',
+          exhaustProfile: 'v10'
+        };
+      } else if (lower.includes('gt3') || lower.includes('porsche') || lower.includes('track spec') || lower.includes('track weapon') || lower.includes('race car')) {
+        reply = "Configured Porsche GT3 RS Track specification: GT Supercar chassis, lightweight aero package, dual high-downforce GT wing, widened front track, dive canards, track camber (-4°), and screaming V10 acoustics.";
+        updates = {
+          bodyStyle: 'coupe',
+          modelName: 'GT3 RS Track',
+          bodyColor: '#16a34a',
+          accentColor: '#ffffff',
+          finish: 'gloss',
+          livery: 'dual',
+          spoiler: 'gt',
+          wingHeight: 0.95,
+          splitter: 0.85,
+          widebody: 0.8,
+          rideHeight: -25,
+          camber: -4,
+          rimColor: '#ffffff',
+          caliperColor: '#ef4444',
+          roofBox: false,
+          canards: true,
+          rollCage: true,
+          seatColor: 'slate',
+          exhaustProfile: 'v10'
+        };
+      } else if (lower.includes('coastal') || lower.includes('wagon') || lower.includes('tourer') || lower.includes('surf')) {
+        reply = "Crafted an Alpine Coastal Grand Tourer: Coastal Blue clearcoat, aerodynamic carbon roof cargo box, saddle tan interior leather, dual GT stripes, and twin-turbo touring acoustics.";
+        updates = {
+          bodyStyle: 'coupe',
+          modelName: 'Coastal Wagon',
+          bodyColor: '#0284c7',
+          accentColor: '#ffffff',
+          finish: 'gloss',
+          livery: 'dual',
+          spoiler: 'none',
+          wingHeight: 0.2,
+          splitter: 0.35,
+          widebody: 0.4,
+          rideHeight: 0,
+          camber: -1.5,
+          rimColor: '#ffffff',
+          caliperColor: '#0284c7',
+          roofBox: true,
+          canards: false,
+          seatColor: 'tan',
+          exhaustProfile: 'turbo'
+        };
+      } else if (lower.includes('ferrari') || lower.includes('corsa') || lower.includes('monza') || lower.includes('maranello')) {
+        reply = "Tuned Maranello Corsa Spec: Deep Rosso Red gloss finish, single racing stripe, clean decklid silhouette, ivory cockpit leather, and golden carbon-ceramic calipers.";
+        updates = {
+          bodyStyle: 'coupe',
+          modelName: 'Monza Corsa',
+          bodyColor: '#ef4444',
+          accentColor: '#ffffff',
+          finish: 'gloss',
+          livery: 'single',
+          spoiler: 'none',
+          wingHeight: 0.2,
+          splitter: 0.5,
+          widebody: 0.5,
+          rideHeight: -15,
+          camber: -2,
+          rimColor: '#e2e8f0',
+          caliperColor: '#facc15',
+          roofBox: false,
+          canards: false,
+          seatColor: 'ivory',
+          exhaustProfile: 'v10'
+        };
+      } else if (lower.includes('lamborghini') || lower.includes('lambo') || lower.includes('aventador') || lower.includes('huracan') || lower.includes('hypercar')) {
+        reply = "Tuned Mid-Engine Hypercar Wedge: Giallo Modena metallic pearl, roof air scoop, aggressive widebody flares, high-angle GT wing, screaming V10, and carbon dive canards.";
+        updates = {
+          bodyStyle: 'hypercar',
+          modelName: 'Torero Hyper-V',
+          bodyColor: '#eab308',
+          accentColor: '#090d16',
+          finish: 'metallic',
+          livery: 'none',
+          spoiler: 'gt',
+          wingHeight: 0.9,
+          splitter: 0.8,
+          widebody: 0.85,
+          rideHeight: -25,
+          camber: -3.5,
+          rimColor: '#090d16',
+          caliperColor: '#eab308',
+          roofBox: false,
+          canards: true,
+          rollCage: true,
+          seatColor: 'slate',
+          exhaustProfile: 'v10'
+        };
+      } else if (lower.includes('batmobile') || lower.includes('stealth') || lower.includes('murdered') || lower.includes('blackout') || lower.includes('all black')) {
+        reply = "Engaged Stealth Blackout Spec: Hypercar wedge chassis, ultra-matte Nero finish, blacked-out alloy rims, aggressive aero package, titanium roll cage, and thunderous V8 exhaust.";
+        updates = {
+          bodyStyle: 'hypercar',
+          modelName: 'Stealth V8',
+          bodyColor: '#090d16',
+          accentColor: '#1e293b',
+          finish: 'matte',
+          livery: 'none',
+          spoiler: 'gt',
+          wingHeight: 0.75,
+          splitter: 0.8,
+          widebody: 0.75,
+          rideHeight: -30,
+          camber: -4,
+          rimColor: '#090d16',
+          caliperColor: '#ef4444',
+          roofBox: false,
+          canards: true,
+          rollCage: true,
+          seatColor: 'slate',
+          exhaustProfile: 'v8'
+        };
+      } else if (lower.includes('drift') || lower.includes('jdm') || lower.includes('stance')) {
+        reply = "Configured Pro-Drift Battle Spec: Deep Midnight Violet, extreme negative track camber (-6.5°), slammed ride height, dual racing livery, widebody flares, and twin-turbo anti-lag acoustics.";
+        updates = {
+          bodyStyle: 'coupe',
+          modelName: 'Apex Drift-X',
+          bodyColor: '#7c3aed',
+          accentColor: '#ffffff',
+          finish: 'metallic',
+          livery: 'dual',
+          spoiler: 'gt',
+          wingHeight: 0.85,
+          splitter: 0.8,
+          widebody: 0.85,
+          rideHeight: -35,
+          camber: -6.5,
+          wheelSize: 19,
+          rimColor: '#ffffff',
+          caliperColor: '#facc15',
+          roofBox: false,
+          canards: true,
+          rollCage: true,
+          seatColor: 'crimson',
+          exhaustProfile: 'turbo'
+        };
+      } else if (lower.includes('safari') || lower.includes('rally') || lower.includes('dakar') || lower.includes('offroad') || lower.includes('suv') || lower.includes('4x4')) {
+        reply = "Built Safari Sport SUV 4x4: Desert Sand metallic, roof storage rack with 4 LED spotlights, full-size rear spare tire, lifted suspension (+20mm), neutral zero-camber, and durable touring turbo acoustics.";
+        updates = {
+          bodyStyle: 'suv',
+          modelName: 'Safari Raid 4x4',
+          bodyColor: '#d97706',
+          accentColor: '#090d16',
+          finish: 'metallic',
+          livery: 'single',
+          spoiler: 'none',
+          wingHeight: 0.1,
+          splitter: 0.3,
+          widebody: 0.6,
+          rideHeight: 20,
+          camber: 0,
+          rimColor: '#ffffff',
+          caliperColor: '#d97706',
+          roofBox: true,
+          canards: false,
+          rollCage: true,
+          seatColor: 'tan',
+          exhaustProfile: 'turbo'
+        };
+      } else if (lower.includes('speedster') || lower.includes('spyder') || lower.includes('roadster') || lower.includes('convertible')) {
+        reply = "Crafted Speedster Spyder: Open-cockpit luxury roadster, low frameless aerodynamic screen, dual streamliner headrest cowls, custom leather, and screaming V10 sound.";
+        updates = {
+          bodyStyle: 'speedster',
+          modelName: 'Monza Spyder',
+          bodyColor: '#ef4444',
+          accentColor: '#ffffff',
+          finish: 'gloss',
+          livery: 'single',
+          spoiler: 'none',
+          wingHeight: 0.15,
+          splitter: 0.45,
+          widebody: 0.5,
+          rideHeight: -15,
+          camber: -2.5,
+          rimColor: '#ffffff',
+          caliperColor: '#facc15',
+          roofBox: false,
+          canards: false,
+          seatColor: 'ivory',
+          exhaustProfile: 'v10'
+        };
+      } else if (lower.includes('muscle') || lower.includes('v8') || lower.includes('interceptor') || lower.includes('mustang')) {
+        reply = "Tuned American Muscle V8: Bulging shaker hood scoop, fastback ducktail, Sunset Gold metallic, dual matte stripes, side-exit quad exhaust tips, aggressive front splitter, and rumbling high-displacement V8 sound.";
+        updates = {
+          bodyStyle: 'muscle',
+          modelName: 'V8 Interceptor',
+          bodyColor: '#f59e0b',
+          accentColor: '#0f172a',
+          finish: 'metallic',
+          livery: 'dual',
+          spoiler: 'gt',
+          wingHeight: 0.6,
+          splitter: 0.7,
+          widebody: 0.6,
+          rideHeight: -10,
+          camber: -2.5,
+          rimColor: '#1e293b',
+          caliperColor: '#ef4444',
+          roofBox: false,
+          canards: true,
+          seatColor: 'crimson',
+          exhaustProfile: 'v8'
+        };
+      } else if (lower.includes('cyber') || lower.includes('neon') || lower.includes('tokyo') || lower.includes('future')) {
+        reply = "Engineered Neo-Tokyo Cyber Concept: Mid-engine hypercar wedge, stealth matte finish, digital camera mirrors, high-mount exhaust, neon ambient lighting, and high-frequency hyper-EV powertrain.";
+        updates = {
+          bodyStyle: 'hypercar',
+          modelName: 'Neo-Tokyo Cyber',
+          bodyColor: '#0f172a',
+          accentColor: '#38bdf8',
+          finish: 'matte',
+          livery: 'none',
+          spoiler: 'gt',
+          wingHeight: 0.8,
+          splitter: 0.8,
+          widebody: 0.7,
+          rideHeight: -30,
+          camber: -5,
+          rimColor: '#475569',
+          caliperColor: '#38bdf8',
+          roofBox: false,
+          canards: true,
+          seatColor: 'slate',
+          exhaustProfile: 'ev'
+        };
+      } else if (lower.includes('critique') || lower.includes('aero') || lower.includes('analysis')) {
+        const wingStatus = config.spoiler === 'gt' ? 'Optimal downforce provided by Active GT Wing' : 'Low drag profile (minimal downforce)';
+        const stanceStatus = Math.abs(config.camber) > 3 ? 'Aggressive high-g cornering camber' : 'Balanced road stance';
+        reply = `Aerodynamic Analysis: ${wingStatus}. Ride height is currently at ${config.rideHeight}mm with ${stanceStatus}. Recommended tuning: Added dive canards and calibrated front splitter to balance high-speed yaw stability.`;
+        updates = {
+          canards: true,
+          splitter: Math.max(0.65, config.splitter),
+          widebody: Math.max(0.55, config.widebody)
+        };
+      } else {
+        // 3. Direct Natural Language Parsing of Body Style, Colors, Aero & Stance
+        const appliedDesc = [];
+        updates = {};
 
-  if (q.includes("wing") || q.includes("spoiler")) currentConfig.hasSpoiler = !q.includes("remove") && !q.includes("no spoiler");
-  if (q.includes("roof box")) currentConfig.hasRoofBox = !q.includes("remove");
-  if (q.includes("canard")) currentConfig.hasCanards = !q.includes("remove");
-  if (q.includes("widebody")) currentConfig.widebody = 0.85;
+        // Body Style & Chassis
+        if (lower.includes('f1') || lower.includes('formula 1') || lower.includes('open wheel') || lower.includes('monocoque')) {
+          updates.bodyStyle = 'f1'; appliedDesc.push('Formula 1 Monocoque chassis');
+        } else if (lower.includes('hypercar') || lower.includes('wedge')) {
+          updates.bodyStyle = 'hypercar'; appliedDesc.push('Hypercar Wedge chassis');
+        } else if (lower.includes('suv') || lower.includes('safari') || lower.includes('truck') || lower.includes('offroad') || lower.includes('4x4')) {
+          updates.bodyStyle = 'suv'; appliedDesc.push('Safari Sport SUV chassis');
+        } else if (lower.includes('muscle') || lower.includes('muscle car')) {
+          updates.bodyStyle = 'muscle'; appliedDesc.push('American Muscle chassis');
+        } else if (lower.includes('speedster') || lower.includes('spyder') || lower.includes('roadster') || lower.includes('convertible')) {
+          updates.bodyStyle = 'speedster'; appliedDesc.push('Speedster Spyder chassis');
+        } else if (lower.includes('coupe') || lower.includes('gt car') || lower.includes('supercar')) {
+          updates.bodyStyle = 'coupe'; appliedDesc.push('GT Supercar chassis');
+        }
 
-  // Sync inputs
-  document.getElementById("paint").value = currentConfig.defaultColor;
-  document.getElementById("wheelColor").value = currentConfig.defaultRims;
-  document.getElementById("finish").value = currentConfig.finish;
-  document.getElementById("stanceRange").value = currentConfig.rideHeight;
-  document.getElementById("camberRange").value = currentConfig.camber;
+        // Colors
+        if (lower.includes('red') || lower.includes('crimson') || lower.includes('scarlet')) {
+          updates.bodyColor = '#ef4444'; appliedDesc.push('Rosso Red');
+        } else if (lower.includes('blue') || lower.includes('navy') || lower.includes('azure')) {
+          updates.bodyColor = '#2563eb'; appliedDesc.push('Deep Blue');
+        } else if (lower.includes('green') || lower.includes('emerald') || lower.includes('lime')) {
+          updates.bodyColor = '#16a34a'; appliedDesc.push('Viper Green');
+        } else if (lower.includes('yellow') || lower.includes('gold') || lower.includes('giallo')) {
+          updates.bodyColor = '#eab308'; appliedDesc.push('Giallo Yellow');
+        } else if (lower.includes('black') || lower.includes('dark') || lower.includes('nero')) {
+          updates.bodyColor = '#090d16'; appliedDesc.push('Nero Black');
+        } else if (lower.includes('white') || lower.includes('pearl')) {
+          updates.bodyColor = '#f8fafc'; appliedDesc.push('Pearl White');
+        } else if (lower.includes('orange') || lower.includes('tangerine')) {
+          updates.bodyColor = '#f97316'; appliedDesc.push('Papaya Orange');
+        } else if (lower.includes('purple') || lower.includes('violet')) {
+          updates.bodyColor = '#a855f7'; appliedDesc.push('Midnight Purple');
+        } else if (lower.includes('pink') || lower.includes('magenta')) {
+          updates.bodyColor = '#ec4899'; appliedDesc.push('Neon Pink');
+        } else if (lower.includes('silver') || lower.includes('grey') || lower.includes('gray')) {
+          updates.bodyColor = '#94a3b8'; appliedDesc.push('Titanium Silver');
+        } else if (lower.includes('cyan') || lower.includes('teal')) {
+          updates.bodyColor = '#06b6d4'; appliedDesc.push('Electric Cyan');
+        }
 
-  syncAccessoryButtons();
-  rebuildCurrentCar();
+        // Finish
+        if (lower.includes('matte')) { updates.finish = 'matte'; appliedDesc.push('Matte finish'); }
+        else if (lower.includes('gloss') || lower.includes('shiny')) { updates.finish = 'gloss'; appliedDesc.push('Gloss finish'); }
+        else if (lower.includes('metallic')) { updates.finish = 'metallic'; appliedDesc.push('Metallic finish'); }
 
-  const reply = `Applied bespoke automotive tuning for "${currentConfig.name}": calibrated paint, wheels, aerodynamics, and suspension geometry in real time!`;
-  box.innerHTML = `
-    <div style="font-weight:bold; color:#fff; margin-bottom:4px;">✅ Gemini AI Modification Complete</div>
-    <div>${reply}</div>
-    <div style="font-size:10px; color:#10b981; margin-top:6px; font-weight:bold;">🟢 Built-in Default Gemini Engine (Free & Instant) • Active Model: ${currentConfig.name}</div>
-  `;
+        // Livery
+        if (lower.includes('dual stripe') || lower.includes('two stripe')) { updates.livery = 'dual'; appliedDesc.push('Dual GT stripes'); }
+        else if (lower.includes('single stripe') || lower.includes('center stripe')) { updates.livery = 'single'; appliedDesc.push('Single racing stripe'); }
+        else if (lower.includes('no stripe') || lower.includes('remove stripe') || lower.includes('clean livery')) { updates.livery = 'none'; appliedDesc.push('Clean livery'); }
+        else if (lower.includes('stripe')) { updates.livery = 'dual'; appliedDesc.push('Racing stripes'); }
 
-  document.getElementById("aiUndoContainer").style.display = "block";
-}
+        // Spoiler
+        if (lower.includes('no spoiler') || lower.includes('remove spoiler') || lower.includes('clean deck') || lower.includes('delete wing')) {
+          updates.spoiler = 'none'; appliedDesc.push('Clean decklid');
+        } else if (lower.includes('add spoiler') || lower.includes('spoiler') || lower.includes('wing') || lower.includes('gt wing')) {
+          updates.spoiler = 'gt';
+          if (lower.includes('big') || lower.includes('huge') || lower.includes('high') || lower.includes('max wing')) {
+            updates.wingHeight = 1.0;
+            appliedDesc.push('Max High-Downforce GT Wing');
+          } else {
+            updates.wingHeight = 0.8;
+            appliedDesc.push('Active GT Wing');
+          }
+        }
 
-function undoAiCommand() {
-  if (!lastAiBackup) return;
-  currentKey = lastAiBackup.key;
-  currentConfig = { ...lastAiBackup.config };
-  document.getElementById("carSelect").value = currentKey;
+        // Widebody & Splitter
+        if (lower.includes('widebody') || lower.includes('wide body') || lower.includes('fender')) {
+          updates.widebody = lower.includes('max') ? 1.0 : 0.8;
+          appliedDesc.push('Widebody flare');
+        } else if (lower.includes('narrow body') || lower.includes('stock body')) {
+          updates.widebody = 0.2;
+          appliedDesc.push('Standard width');
+        }
+        if (lower.includes('splitter')) { updates.splitter = 0.85; appliedDesc.push('Carbon front splitter'); }
 
-  document.getElementById("paint").value = currentConfig.defaultColor;
-  document.getElementById("wheelColor").value = currentConfig.defaultRims;
-  document.getElementById("finish").value = currentConfig.finish;
-  document.getElementById("stanceRange").value = currentConfig.rideHeight;
-  document.getElementById("camberRange").value = currentConfig.camber;
+        // Stance & Camber
+        if (lower.includes('lower') || lower.includes('slam') || lower.includes('drop') || lower.includes('low ride')) {
+          updates.rideHeight = -35; appliedDesc.push('Slammed stance (-35mm)');
+        } else if (lower.includes('raise') || lower.includes('lift') || lower.includes('high ride')) {
+          updates.rideHeight = 15; appliedDesc.push('Lifted suspension (+15mm)');
+        }
+        if (lower.includes('camber') || lower.includes('stance')) {
+          updates.camber = lower.includes('max') ? -7.5 : -5;
+          appliedDesc.push(`Track camber (${updates.camber}°)`);
+        } else if (lower.includes('straight wheel') || lower.includes('zero camber')) {
+          updates.camber = 0; appliedDesc.push('Zero camber');
+        }
 
-  syncAccessoryButtons();
-  rebuildCurrentCar();
+        // Rims & Wheels
+        if (lower.includes('black rim') || lower.includes('dark rim') || lower.includes('black wheel')) {
+          updates.rimColor = '#090d16'; appliedDesc.push('Black rims');
+        } else if (lower.includes('gold rim') || lower.includes('bronze rim')) {
+          updates.rimColor = '#d97706'; appliedDesc.push('Gold rims');
+        } else if (lower.includes('white rim') || lower.includes('white wheel')) {
+          updates.rimColor = '#ffffff'; appliedDesc.push('White rims');
+        } else if (lower.includes('silver rim') || lower.includes('chrome rim')) {
+          updates.rimColor = '#e2e8f0'; appliedDesc.push('Silver rims');
+        } else if (lower.includes('red rim')) {
+          updates.rimColor = '#ef4444'; appliedDesc.push('Red rims');
+        }
 
-  document.getElementById("aiResponseBox").innerHTML = `<span>↩️ Reverted back to previous car build.</span>`;
-  document.getElementById("aiUndoContainer").style.display = "none";
-}
+        // Calipers
+        if (lower.includes('red caliper') || lower.includes('red brake')) {
+          updates.caliperColor = '#ef4444'; appliedDesc.push('Red calipers');
+        } else if (lower.includes('yellow caliper') || lower.includes('gold caliper') || lower.includes('gold brake')) {
+          updates.caliperColor = '#facc15'; appliedDesc.push('Yellow calipers');
+        } else if (lower.includes('blue caliper')) {
+          updates.caliperColor = '#0284c7'; appliedDesc.push('Blue calipers');
+        }
 
-// ============================================================================
-// 8. INTRO VIDEO CONTROLLER
-// ============================================================================
-function enterStudio() {
-  const overlay = document.getElementById("intro-overlay");
-  const vid = document.getElementById("introVideo");
-  if (vid) {
-    try { vid.pause(); } catch(e) {}
-  }
-  if (overlay) {
-    overlay.style.opacity = "0";
-    overlay.style.pointerEvents = "none";
-    setTimeout(() => {
-      overlay.style.display = "none";
-      onWindowResize();
-    }, 600);
-  }
-}
+        // Accessories
+        if (lower.includes('roof box') || lower.includes('cargo box')) {
+          updates.roofBox = !lower.includes('remove') && !lower.includes('delete');
+          appliedDesc.push(updates.roofBox ? 'Roof cargo box' : 'Removed roof box');
+        }
+        if (lower.includes('canard') || lower.includes('dive plane')) {
+          updates.canards = !lower.includes('remove') && !lower.includes('delete');
+          appliedDesc.push(updates.canards ? 'Dive canards' : 'Removed canards');
+        }
+        if (lower.includes('roll cage') || lower.includes('cage')) {
+          updates.rollCage = !lower.includes('remove') && !lower.includes('delete');
+          appliedDesc.push(updates.rollCage ? 'Roll cage' : 'Removed roll cage');
+        }
 
-function toggleIntroSound() {
-  const vid = document.getElementById("introVideo");
-  const btn = document.getElementById("introSoundBtn");
-  if (!vid) return;
-  vid.muted = !vid.muted;
-  btn.textContent = vid.muted ? "🔇 Unmute" : "🔊 Mute";
-}
+        // Interior
+        if (lower.includes('tan interior') || lower.includes('tan seat') || lower.includes('brown interior')) {
+          updates.seatColor = 'tan'; appliedDesc.push('Tan leather interior');
+        } else if (lower.includes('red interior') || lower.includes('crimson seat')) {
+          updates.seatColor = 'crimson'; appliedDesc.push('Crimson racing seats');
+        } else if (lower.includes('white interior') || lower.includes('ivory seat')) {
+          updates.seatColor = 'ivory'; appliedDesc.push('Ivory leather interior');
+        } else if (lower.includes('black interior') || lower.includes('slate seat')) {
+          updates.seatColor = 'slate'; appliedDesc.push('Slate grey interior');
+        }
 
-function replayIntro() {
-  const overlay = document.getElementById("intro-overlay");
-  const vid = document.getElementById("introVideo");
-  if (overlay) {
-    overlay.style.display = "flex";
-    overlay.style.pointerEvents = "auto";
-    setTimeout(() => { overlay.style.opacity = "1"; }, 10);
-  }
-  if (vid) {
-    vid.currentTime = 0;
-    vid.play().catch(() => {});
-  }
-}
+        // Exhaust
+        if (lower.includes('v8')) { updates.exhaustProfile = 'v8'; appliedDesc.push('V8 exhaust'); }
+        else if (lower.includes('v10')) { updates.exhaustProfile = 'v10'; appliedDesc.push('V10 exhaust'); }
+        else if (lower.includes('turbo')) { updates.exhaustProfile = 'turbo'; appliedDesc.push('Turbo exhaust'); }
+        else if (lower.includes('ev') || lower.includes('electric')) { updates.exhaustProfile = 'ev'; appliedDesc.push('EV powertrain'); }
 
-// ============================================================================
-// 9. ANIMATION LOOP & RESIZE
-// ============================================================================
-let clock = new THREE.Clock();
+        if (appliedDesc.length > 0) {
+          reply = `Command executed: Applied ${appliedDesc.join(', ')} directly to the 3D car model.`;
+        } else {
+          reply = `Applied bespoke tuning package for "${q}": balanced downforce, widened stance, and calibrated aerodynamics.`;
+          updates = {
+            widebody: Math.max(0.55, config.widebody),
+            splitter: Math.max(0.6, config.splitter),
+            canards: true
+          };
+        }
+      }
 
-function animate() {
-  requestAnimationFrame(animate);
-  const delta = clock.getDelta();
+      return { reply, updates, action, actionTheme };
+    }
 
-  if (isTurntableActive) {
-    platform.rotation.y += delta * 0.45;
-    carGroup.rotation.y += delta * 0.45;
-  }
+    // API Key & Gemini AI Co-Pilot
+    function syncApiBadge() {
+      const badge = document.getElementById('api-badge');
+      if (badge) {
+        if (apiKey) {
+          badge.textContent = '🟢 LIVE CLOUD KEY';
+          badge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-bold';
+        } else {
+          badge.textContent = '🟢 DEFAULT GEMINI (ACTIVE)';
+          badge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 font-bold';
+        }
+      }
+      const inp = document.getElementById('inp-apikey');
+      if (inp) inp.value = apiKey;
+    }
+    syncApiBadge();
+    syncModelCards();
 
-  if (isWindActive) {
-    wheelMeshes.forEach(w => { w.rotation.x += delta * 12; });
-    streamlines.forEach((line, idx) => {
-      line.position.z -= delta * 6;
-      if (line.position.z < -3.5) line.position.z = 3.5 + (idx % 2) * 0.5;
-    });
-  }
+    function useDefaultGemini() {
+      apiKey = '';
+      localStorage.removeItem('tcm_gemini_key');
+      syncApiBadge();
+    syncModelCards();
+      const st = document.getElementById('key-test-status');
+      if (st) {
+        st.className = 'p-2.5 rounded-xl text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 block';
+        st.innerHTML = '<span>✅ Default Gemini Smart Engine Activated!</span><div class="mt-1 font-normal text-[11px] text-emerald-700">Zero-latency sports car naming, aerodynamic packages, and track specs are ready.</div>';
+      }
+    }
 
-  controls.update();
-  renderer.render(scene, camera);
-}
+    function saveApiKey() {
+      const raw = document.getElementById('inp-apikey').value.trim();
+      apiKey = raw;
+      if (apiKey) {
+        localStorage.setItem('tcm_gemini_key', apiKey);
+      } else {
+        localStorage.removeItem('tcm_gemini_key');
+      }
+      syncApiBadge();
+    syncModelCards();
+      const st = document.getElementById('key-test-status');
+      if (st) {
+        st.className = 'p-2.5 rounded-xl text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 block';
+        st.textContent = apiKey ? 'Custom Gemini API Key saved!' : 'Switched to Default Gemini Engine!';
+        setTimeout(() => { toggleModal('modal-key', false); st.className = 'hidden'; }, 800);
+      } else {
+        toggleModal('modal-key', false);
+      }
+    }
 
-function onWindowResize() {
-  const width = canvas.clientWidth;
-  const height = canvas.clientHeight;
-  if (!width || !height) return;
+    function clearApiKey() {
+      useDefaultGemini();
+    }
 
-  camera.aspect = width / height;
-  camera.updateProjectionMatrix();
-  renderer.setSize(width, height);
-}
+    // Modern Gemini API Caller with active model cascade
+    async function callGeminiApi(currentKey, promptText, options = {}) {
+      if (!currentKey) {
+        throw new Error('No API key provided.');
+      }
 
-window.addEventListener("resize", onWindowResize);
+      const isJson = options.responseMimeType === 'application/json';
+      const bodyPayload = {
+        contents: [{ parts: [{ text: promptText }] }]
+      };
+      if (isJson) {
+        bodyPayload.generationConfig = { responseMimeType: 'application/json' };
+      }
 
-// Start
-loadCar();
-updateGarageNavCount();
-animate();
-setTimeout(onWindowResize, 200);
-</script>
+      // Active Google Generative Language models in priority order
+      const modelsToTry = [
+        { ver: 'v1beta', model: 'gemini-2.0-flash' },
+        { ver: 'v1beta', model: 'gemini-2.5-flash' },
+        { ver: 'v1beta', model: 'gemini-2.0-flash-lite' },
+        { ver: 'v1beta', model: 'gemini-1.5-flash' },
+        { ver: 'v1beta', model: 'gemini-1.5-flash-latest' }
+      ];
 
+      let lastError = null;
+      for (const { ver, model } of modelsToTry) {
+        try {
+          const url = `https://generativelanguage.googleapis.com/${ver}/models/${model}:generateContent?key=${encodeURIComponent(currentKey)}`;
+          const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(bodyPayload)
+          });
+          const data = await res.json();
+          if (res.ok && data?.candidates?.[0]?.content?.parts?.[0]?.text) {
+            return {
+              text: data.candidates[0].content.parts[0].text,
+              modelUsed: model,
+              apiVersion: ver
+            };
+          } else if (data?.error?.message) {
+            lastError = data.error.message;
+            if (data.error.message.includes('not found') || data.error.code === 404 || data.error.message.includes('not supported')) {
+              continue;
+            } else {
+              throw new Error(data.error.message);
+            }
+          }
+        } catch (err) {
+          if (err.message && !err.message.includes('not found') && !err.message.includes('404') && !err.message.includes('not supported')) {
+            throw err;
+          }
+          lastError = err.message;
+        }
+      }
+      throw new Error(lastError || 'Could not reach Gemini live cloud models.');
+    }
+
+    async function testApiKey() {
+      const keyVal = document.getElementById('inp-apikey').value.trim();
+      const st = document.getElementById('key-test-status');
+      const btn = document.getElementById('btn-test-key');
+      if (!keyVal) {
+        useDefaultGemini();
+        return;
+      }
+      if (btn) btn.textContent = 'Testing...';
+      if (st) {
+        st.className = 'p-2.5 rounded-xl text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200 block';
+        st.textContent = 'Testing Google Generative Language models...';
+      }
+
+      try {
+        const result = await callGeminiApi(keyVal, 'Hello! Reply with "OK".');
+        st.className = 'p-2.5 rounded-xl text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 block';
+        st.textContent = `Connected successfully! (Active Model: ${result.modelUsed})`;
+      } catch (err) {
+        console.warn('API test notice:', err);
+        st.className = 'p-2.5 rounded-xl text-xs font-semibold bg-amber-50 text-amber-900 border border-amber-200 block';
+        st.innerHTML = `<span>⚡ Live API Notice: ${err.message || 'Key restricted'}.</span><div class="mt-1 font-normal text-[11px] text-slate-600">The <b>Default Gemini Smart Engine</b> is active as primary/fallback. All AI styling, aerodynamic analysis, and car names work 100%! 👍</div>`;
+      } finally {
+        if (btn) btn.innerHTML = '<span>🧪</span> Test';
+      }
+    }
+
+    async function generateCarName() {
+      const dynamicNames = [
+        'Valkyrie GT-R', 'Apex RS-9', 'Stratos V10', 'Solstice GT', 'Zephyr Evo',
+        'Veloce GT-7', 'Monza Corsa', 'Nürburg RS-4', 'Kyalami GT3', 'AeroBlade X',
+        'Veneno Track', 'Hyperion V8', 'Spectre Turbo', 'Chrono GT', 'Maranello RS'
+      ];
+
+      if (apiKey) {
+        try {
+          const result = await callGeminiApi(apiKey, `Invent ONE cool sports car model name (max 16 chars) for color=${config.bodyColor}, spoiler=${config.spoiler}, roofBox=${config.roofBox}, exhaust=${config.exhaustProfile}. Return ONLY the name.`);
+          const name = result.text.trim().replace(/["']/g, '');
+          if (name && name.length <= 20) {
+            updateCfg({ modelName: name });
+            return;
+          }
+        } catch (err) {
+          console.warn('Live API name failed, falling back to smart engine:', err);
+        }
+      }
+
+      const chosen = dynamicNames[Math.floor(Math.random() * dynamicNames.length)];
+      updateCfg({ modelName: chosen });
+    }
+
+    let lastAiBackupConfig = null;
+
+    function undoLastAiCommand() {
+      if (lastAiBackupConfig) {
+        updateCfg(lastAiBackupConfig);
+        const box = document.getElementById('ai-box');
+        if (box) {
+          box.innerHTML += `<div class="p-2 rounded-xl text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200">↩️ Reverted to previous car design!</div>`;
+        }
+      }
+    }
+
+    function applyPendingAi() { if (pendingAiUpdates) updateCfg(pendingAiUpdates); }
+
+    async function askGemini(presetQuery) {
+      const inp = document.getElementById('inp-ai');
+      const q = presetQuery || inp.value.trim();
+      if (!q) return;
+      inp.value = '';
+      const box = document.getElementById('ai-box');
+      box.innerHTML = '<div class="flex items-center gap-2 text-blue-600"><span class="animate-spin text-base">⚙️</span><i>Executing Gemini automotive command & sculpting 3D model...</i></div>';
+
+      // Save state for undo
+      lastAiBackupConfig = { ...config };
+
+      // 1. If user provided their personal key, attempt live cloud execution
+      if (apiKey) {
+        try {
+          const promptStr = `You are an expert automotive designer and 3D car builder.
+Current car configuration: ${JSON.stringify(config)}.
+The user's direct command is: "${q}".
+Directly execute and follow the user's styling, aerodynamic, stance, or parts command!
+Return ONLY valid JSON with keys:
+"reply": a stylish, confident 1-2 sentence response confirming the applied modifications.
+"updates": an object containing only the modified keys:
+  modelName (string, max 16 chars),
+  bodyColor (hex),
+  accentColor (hex),
+  finish ("gloss"|"matte"|"metallic"),
+  livery ("none"|"single"|"dual"),
+  spoiler ("none"|"gt"),
+  wingHeight (0..1),
+  splitter (0..1),
+  widebody (0..1),
+  rideHeight (-40..25),
+  camber (-8..0),
+  wheelSize (18..22),
+  rimColor (hex),
+  caliperColor (hex),
+  roofBox (bool),
+  canards (bool),
+  rollCage (bool),
+  seatColor ("tan"|"ivory"|"crimson"|"slate"),
+  exhaustProfile ("v8"|"v10"|"turbo"|"ev"),
+  action ("4d"|"cockpit"|"exterior"|null)`;
+
+          const result = await callGeminiApi(apiKey, promptStr, { responseMimeType: 'application/json' });
+          let raw = result.text.replace(/```json/g, '').replace(/```/g, '').trim();
+          const parsed = JSON.parse(raw);
+          pendingAiUpdates = parsed.updates || {};
+
+          // Auto-apply immediately to 3D model!
+          if (pendingAiUpdates && Object.keys(pendingAiUpdates).length > 0) {
+            updateCfg(pendingAiUpdates);
+          }
+          if (parsed.action === '4d' && !test4D) toggle4DTest();
+          if (parsed.action === 'cockpit' && viewMode !== 'interior') toggleViewMode();
+          if (parsed.action === 'exterior' && viewMode !== 'exterior') toggleViewMode();
+
+          const changeBadges = formatChangeSummary(pendingAiUpdates);
+          box.innerHTML = `<p class="font-medium text-slate-800 leading-snug">${parsed.reply || 'Design modifications applied.'}</p>` +
+            `<div class="p-2 rounded-xl bg-emerald-50 border border-emerald-200 text-[11px] text-emerald-950 space-y-1">` +
+              `<div class="font-bold flex items-center gap-1.5 text-emerald-800">` +
+                `<span>⚡</span> Applied to 3D Model in real-time!` +
+              `</div>` +
+              (changeBadges ? `<div class="text-[10px] text-emerald-700 font-medium">${changeBadges}</div>` : '') +
+            `</div>` +
+            `<button onclick="undoLastAiCommand()" class="w-full py-1.5 rounded-xl font-bold text-[11px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 shadow-sm flex items-center justify-center gap-1 transition">` +
+              `<span>↩️</span> Undo AI Changes` +
+            `</button>` +
+            `<div class="text-[10px] text-blue-600 font-semibold">⚡ Generated via live ${result.modelUsed}</div>`;
+          return;
+        } catch (err) {
+          console.warn('Live API warning, seamlessly executing via Default Gemini Smart Engine:', err);
+        }
+      }
+
+      // 2. Default Built-in Gemini Smart Engine (Instant, zero latency, 100% reliable)
+      const res = smartGeminiEngine(q);
+      pendingAiUpdates = res.updates || {};
+
+      // Auto-apply immediately to 3D model!
+      if (pendingAiUpdates && Object.keys(pendingAiUpdates).length > 0) {
+        updateCfg(pendingAiUpdates);
+      }
+      if (res.action === '4d' && !test4D) toggle4DTest();
+      if (res.action === 'cockpit' && viewMode !== 'interior') toggleViewMode();
+      if (res.action === 'exterior' && viewMode !== 'exterior') toggleViewMode();
+      if (res.actionTheme) setTheme(res.actionTheme);
+
+      const changeBadges = formatChangeSummary(pendingAiUpdates);
+      box.innerHTML = `<p class="font-medium text-slate-800 leading-snug">${res.reply}</p>` +
+        `<div class="p-2 rounded-xl bg-emerald-50 border border-emerald-200 text-[11px] text-emerald-950 space-y-1">` +
+          `<div class="font-bold flex items-center gap-1.5 text-emerald-800">` +
+            `<span>⚡</span> Applied to 3D Model in real-time!` +
+          `</div>` +
+          (changeBadges ? `<div class="text-[10px] text-emerald-700 font-medium">${changeBadges}</div>` : '') +
+        `</div>` +
+        `<button onclick="undoLastAiCommand()" class="w-full py-1.5 rounded-xl font-bold text-[11px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 shadow-sm flex items-center justify-center gap-1 transition">` +
+          `<span>↩️</span> Undo AI Changes` +
+        `</button>` +
+        `<div class="text-[10px] text-emerald-600 font-semibold">🟢 Powered by Default Gemini Smart Engine</div>`;
+    }
+
+    // Designer Sign-In & Garage Management
+    const getGarageKey = () => designer ? `tcm_garage_${designer.email}` : 'tcm_garage_guest';
+
+    function renderAuthUI() {
+      const slot = document.getElementById('auth-slot');
+      const gList = readStore(getGarageKey(), []);
+      document.getElementById('btn-garage').textContent = `📁 Garage (${gList.length})`;
+
+      if (designer) {
+        slot.innerHTML = `<div class="px-3 py-1 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 flex items-center gap-2 text-xs font-bold">
+          <span>🛡️ ${designer.name}</span>
+          <button onclick="signOut()" class="text-rose-600 hover:underline">Sign Out</button>
+        </div>`;
+      } else {
+        slot.innerHTML = `<button onclick="toggleModal('modal-auth', true)" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-blue-600 text-white">👤 Designer Sign In</button>`;
+      }
+    }
+    renderAuthUI();
+
+    function setAuthTab(mode) {
+      authMode = mode;
+      const errEl = document.getElementById('auth-err');
+      const succEl = document.getElementById('auth-success');
+      if (errEl) errEl.classList.add('hidden');
+      if (succEl) succEl.classList.add('hidden');
+
+      const isSignIn = mode === 'signin';
+      const tIn = document.getElementById('tab-auth-signin');
+      const tUp = document.getElementById('tab-auth-signup');
+      if (tIn) tIn.className = isSignIn ? 'py-2 rounded-lg bg-blue-600 text-white shadow-sm' : 'py-2 rounded-lg opacity-70 hover:opacity-100';
+      if (tUp) tUp.className = !isSignIn ? 'py-2 rounded-lg bg-blue-600 text-white shadow-sm' : 'py-2 rounded-lg opacity-70 hover:opacity-100';
+
+      const titleEl = document.getElementById('auth-title');
+      if (titleEl) titleEl.textContent = isSignIn ? 'DESIGNER SIGN IN' : 'CREATE STUDIO ACCOUNT';
+      const fields = document.getElementById('signup-fields');
+      if (fields) fields.classList.toggle('hidden', isSignIn);
+      const submitBtn = document.getElementById('auth-submit-btn');
+      if (submitBtn) submitBtn.textContent = isSignIn ? 'Sign In & Unlock Garage' : 'Create Designer Account';
+    }
+
+    function quickDemoLogin() {
+      designer = { name: 'Jayesh Malav', email: 'jayesh@modling.com', studioTag: '@jayesh_modling' };
+      localStorage.setItem('tcm_current_designer', JSON.stringify(designer));
+      renderAuthUI();
+      toggleModal('modal-auth', false);
+    }
+
+    function continueAsGuest() {
+      toggleModal('modal-auth', false);
+    }
+
+    function handleAuth(e) {
+      e.preventDefault();
+      const errEl = document.getElementById('auth-err');
+      const succEl = document.getElementById('auth-success');
+      if (errEl) errEl.classList.add('hidden');
+      if (succEl) succEl.classList.add('hidden');
+
+      const users = readStore('tcm_designers_db', {});
+      const email = document.getElementById('auth-email').value.trim().toLowerCase();
+      const pass = document.getElementById('auth-pass').value;
+
+      if (authMode === 'signup') {
+        const name = document.getElementById('auth-name').value.trim();
+        const tag = document.getElementById('auth-tag').value.trim() || `@${name.toLowerCase().replace(/\s+/g, '')}`;
+        if (!name) {
+          if (errEl) { errEl.textContent = 'Please enter your designer name.'; errEl.classList.remove('hidden'); }
+          return;
+        }
+        if (users[email]) {
+          if (errEl) { errEl.textContent = 'Account already exists. Switched to Sign In tab.'; errEl.classList.remove('hidden'); }
+          setAuthTab('signin');
+          return;
+        }
+        designer = { name, email, studioTag: tag, password: pass };
+        users[email] = designer;
+        localStorage.setItem('tcm_designers_db', JSON.stringify(users));
+      } else {
+        if (!users[email] || users[email].password !== pass) {
+          // If no user exists yet, allow instant auto-registration on first sign in
+          if (!users[email]) {
+            designer = { name: email.split('@')[0], email, studioTag: `@${email.split('@')[0]}`, password: pass };
+            users[email] = designer;
+            localStorage.setItem('tcm_designers_db', JSON.stringify(users));
+          } else {
+            if (errEl) {
+              errEl.textContent = 'Incorrect password. Please try again.';
+              errEl.classList.remove('hidden');
+            }
+            return;
+          }
+        } else {
+          designer = users[email];
+        }
+      }
+      localStorage.setItem('tcm_current_designer', JSON.stringify(designer));
+      renderAuthUI();
+      toggleModal('modal-auth', false);
+    }
+
+    function signOut() {
+      localStorage.removeItem('tcm_current_designer');
+      designer = null;
+      renderAuthUI();
+    }
+
+    function saveToGarage() {
+      if (!designer) { toggleModal('modal-auth', true); return; }
+      const thumb = renderer.domElement.toDataURL('image/png');
+      const list = readStore(getGarageKey(), []);
+      list.unshift({
+        id: Date.now(),
+        name: config.modelName || 'Custom Build',
+        studioTag: designer.studioTag,
+        savedAt: new Date().toLocaleDateString(),
+        config: { ...config },
+        thumb
+      });
+      localStorage.setItem(getGarageKey(), JSON.stringify(list));
+      renderAuthUI();
+      openGarage();
+    }
+
+    function openGarage() {
+      const list = readStore(getGarageKey(), []);
+      document.getElementById('garage-title').textContent = designer ? `${designer.name.toUpperCase()}'S GARAGE (${list.length})` : `GUEST GARAGE (${list.length})`;
+      const container = document.getElementById('garage-list');
+      if (!list.length) {
+        container.innerHTML = `<p class="col-span-2 text-center opacity-60 py-6">${designer ? 'No saved builds yet. Customize your car and click Save!' : 'Sign in as a Designer to save your builds!'}</p>`;
+      } else {
+        container.innerHTML = list.map((item, idx) => `
+          <div class="border rounded-xl p-2.5 space-y-2">
+            <img src="${item.thumb}" class="w-full h-24 object-cover rounded-lg bg-slate-100" />
+            <div class="flex justify-between items-center">
+              <div><div class="font-bold">${item.name}</div><div class="text-[10px] opacity-60">${item.studioTag} • ${item.savedAt}</div></div>
+              <button onclick="deleteBuild(${idx})" class="text-rose-500 font-bold">🗑️</button>
+            </div>
+            <button onclick="loadBuild(${idx})" class="w-full py-1.5 rounded-lg bg-blue-600 text-white font-bold">Load Design</button>
+          </div>
+        `).join('');
+      }
+      toggleModal('modal-garage', true);
+    }
+
+    function loadBuild(idx) {
+      const list = readStore(getGarageKey(), []);
+      if (list[idx]) { updateCfg(list[idx].config); toggleModal('modal-garage', false); }
+    }
+
+    function deleteBuild(idx) {
+      const list = readStore(getGarageKey(), []);
+      list.splice(idx, 1);
+      localStorage.setItem(getGarageKey(), JSON.stringify(list));
+      renderAuthUI();
+      openGarage();
+    }
+
+    function downloadPNG() {
+      const a = document.createElement('a');
+      a.download = `${(config.modelName || 'Aero_GT').replace(/\s+/g, '_')}_THE_CAR_MODLING.png`;
+      a.href = renderer.domElement.toDataURL('image/png');
+      a.click();
+    }
+
+    function exportGLB() {
+      const exporter = new THREE.GLTFExporter();
+      exporter.parse(carGroup, (glb) => {
+        const blob = new Blob([glb], { type: 'model/gltf-binary' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `${(config.modelName || 'Aero_GT').replace(/\s+/g, '_')}.glb`;
+        a.click();
+      }, { binary: true });
+    }
+  </script>
 </body>
 </html>
